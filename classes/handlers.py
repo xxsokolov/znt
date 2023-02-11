@@ -39,6 +39,7 @@ class ZNT:
         self.message = None
         self.bots = bots['bots']
         self.bot = None
+        self.proxy = None
         self.__create_settings_list()
         self.__handling_settings()
         self.__init_bot()
@@ -350,13 +351,14 @@ class ZNT:
             else:
                 group, sep, username = settings.rpartition('@')
                 username = sep + username
-                # Ищем имя бота отвечающего требования Telegram
+                # Ищем имя бота отвечающего требованиям Telegram
                 if re.search("^(?=.{5,35}$)@[a-zA-Z0-9_]+(?:bot|Bot)", username):
                     self.logger.info("Отправка сообщения через бота: {}: {}'".format(trigger_settings_tag, settings))
                     list_priority = []
                     for bot in self.bots[_default]:
                         if bot['bot'] == username:
                             self.bot = bot['token']
+                            self.proxy = bot['proxy']
                             self.logger.info("Бот {} найден в ботс-файле".format(bot['bot']))
                             return
                     self.bot = False
@@ -372,6 +374,7 @@ class ZNT:
                 for bot in self.bots[group]:
                     if bot['bot'] == username:
                         self.bot = bot['token']
+                        self.proxy = bot['proxy']
                         self.logger.info("Бот {} найден в ботс-файле.".format(username))
                         return
                 self.bot = False
@@ -385,5 +388,6 @@ class ZNT:
 
             for bot in self.bots[_default]:
                 if bot['priority'] == min(list_priority):
-                    self.logger.info("Отправка сообщения через приоритетного бота в ботс-файле: {}'".format(bot['bot']))
                     self.bot = bot['token']
+                    self.proxy = bot['proxy']
+                    self.logger.info("Отправка сообщения через приоритетного бота в ботс-файле: {}'".format(bot['bot']))

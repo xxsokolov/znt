@@ -75,6 +75,7 @@ def main():
     znt = ZNT(logger=logger, bots=bot_config, zabbix_req=zabbix_req,  preferences=send_config.preferences)
 
     send_message = Telegram(token=znt.bot,
+                            proxy=znt.proxy,
                             send_to=args.Username,
                             send_from='',
                             message=znt.message,

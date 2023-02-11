@@ -24,7 +24,7 @@ class Telegram:
 
 
     def __init__(self, logger, send_to: str, send_from: str, chart_png, message: str, keyboard: bool,
-                 token: str = None, disable_notification=False):
+                 token: str = None, proxy=False, disable_notification=False):
         self.logger = logger
         self.send_to = send_to
         self.chat_id = None
@@ -33,6 +33,8 @@ class Telegram:
         self.message = message
         self.disable_notification = disable_notification
         self.bot = TeleBot(token)
+        if isinstance(proxy, dict):
+            apihelper.proxy = json.loads(proxy)
         self.__send_messages()
 
     def get_cache(self, chat_name: str = None, chat_id: str = None):
