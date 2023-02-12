@@ -10,6 +10,8 @@ __maintainer__ = "Sokolov Dmitry"
 __license__ = "MIT"
 import re
 import html
+import io
+from PIL import Image, ImageDraw, ImageFont
 from config import *
 
 
@@ -50,6 +52,7 @@ class ZNT:
         self.__create_tags()
         self.__create_mentions_list()
         self.__create_chart()
+        self.__watermark_text()
         self.__create_message()
 
     def __create_message(self):
@@ -80,6 +83,34 @@ class ZNT:
                                             tags='\n\n'+tags if tags else '',
                                             tags_settings='\n\n'+tags_settings if tags_settings else '',
                                             mentions='\n\n'+mentions if mentions else '')
+        return
+
+    def __watermark_text(self):
+        img = io.BytesIO(self.chart_png['img'])
+        img = Image.open(img).convert("RGBA")
+
+        if img.height < watermark_minimal_height:
+            self.logger.info(
+                "Cannot set watermark text, img height {} (min. {})".format(img.height, watermark_minimal_height))
+            return False
+        font = ImageFont.truetype("arial.ttf", 14)
+
+        line_height = sum(font.getmetrics())
+
+        txt = Image.new('RGBA', (font.getsize(watermark_label)[0], line_height))
+
+        ImageDraw.Draw(txt).text((0, 0), watermark_label, fill=watermark_fill, font=font)
+
+        txt = txt.rotate(watermark_rotate, resample=Image.BICUBIC, expand=True)
+
+        img_size = img.crop().size
+        size = (img_size[0] - txt.size[0] - 10, img_size[1] - txt.size[1] - 5)
+        img.paste(watermark_text_color, box=size, mask=txt)
+
+        img_byte_arr = io.BytesIO()
+        img.save(img_byte_arr, format='PNG')
+        img_byte_arr = img_byte_arr.getvalue()
+        self.chart_png['img'] = img_byte_arr
         return
 
     def __create_chart(self):

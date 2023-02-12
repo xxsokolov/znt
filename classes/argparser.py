@@ -25,6 +25,7 @@ class ArgParsing:
         #self.discovery_mode_parser = None
         self.zabbix = None
         self.console = None
+        self.init = None
 
     def create_parser(self):
         self.parser = self.argparse.ArgumentParser(
@@ -38,19 +39,16 @@ class ArgParsing:
 
         self.zabbix = self.subparsers.add_parser('zabbix')
         self.zabbix.add_argument('username', nargs='?', help='Set username Telegram')
-        self.zabbix.add_argument('subject', nargs='?', help='Set subject')
-        self.zabbix.add_argument('messages', nargs='?', help='Set message', type=str)
-        self.zabbix.add_argument('token', nargs='?', help='Set token', default=False)
+        # self.zabbix.add_argument('--MainConfigYaml',default='.main_config.yaml', required=False, type=str)
         self.zabbix.add_argument('--debug', type=str, nargs='?', const=True, default=False, help='Debug mode')
 
         self.console = self.subparsers.add_parser('console')
-        #self.console.add_argument('--MainConfigYaml', required=False, type=str)
+        #self.console.add_argument('--MainConfigYaml',default='.main_config.yaml', required=False, type=str)
         self.console.add_argument('--Username', nargs='?', required=True, help='Set username Telegram')
         self.console.add_argument('--SendConfigYaml', default='.send_config.yaml', required=False, type=str)
         self.console.add_argument('--BotConfigYaml', default='.bots.yaml', required=False, type=str)
-
-        #self.console.add_argument('--parameters', nargs='?', help='Set message', type=str)
-        #self.console.add_argument('--token', nargs='?', help='Set token', default=False)
         self.console.add_argument('--debug', type=str, nargs='?', const=True, default=False, help='Debug mode')
+
+        self.init = self.subparsers.add_parser('init')
 
         return self.parser
