@@ -1,4 +1,6 @@
 pyTelegramBotAPI
+py-zabbix
+urllib3
 pillow
 pysocks
 yaml
