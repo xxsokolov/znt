@@ -114,6 +114,13 @@ class ZNT:
         return
 
     def __create_chart(self):
+        # graphs_png = Grafana.RenderingPNG().get_screenshote(
+        #     url='http://192.168.1.200:3000/d/YGLp1d14k/test_dash?orgId=1&viewPanel=2',
+        #     login='admin',
+        #     password='AdminAdmin',
+        #     width=300,
+        #     height=100,
+        #     timeout_render=5)
         if (self.options.graphs and zabbix_graph) and not self.settings_no_graph:
             num_items_id = [item_id for item_id in self.macros.itemid.split() if re.findall(r"\d+", item_id)]
             if len(num_items_id) == 1:
@@ -330,8 +337,12 @@ class ZNT:
         if trigger_settings_tag_not_notify in self.zntsettings[trigger_settings_tag]:
             self.logger.info("Отправка сообщения без оповещения: {}:'{}'".format(trigger_settings_tag, trigger_settings_tag_not_notify))
             self.settings_not_notify = True
-    # def __settings_draw_style(self, settings):
-    #     pass
+
+        # if trigger_settings_grafana_dash in self.zntsettings[trigger_settings_tag]:
+        #     self.logger.info("Отправка сообщения без оповещения: {}:'{}'".format(trigger_settings_tag,
+        #                                                                          trigger_settings_tag_not_notify))
+        #     self.settings_not_notify = True
+
 
     def __settings_chart_period(self):
         if isinstance(self.zntsettings, dict) and not all(
