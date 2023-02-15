@@ -61,3 +61,36 @@ class ZabbixReq:
                 return dict(img=None, url=None)
         except Exception as err:
             self.logger.error("Exception occurred: {}".format(err)), exit(1)
+
+
+class Grafana:
+    def __init__(self):
+        self.host = '192.168.1.200'
+        self.port = '3000'
+        self.proto = 'http'
+        self.login = 'admin'
+        self.password = 'AdminAdmin'
+        self.cookie = None
+        self.api_grafana = None
+        self.api_dashboard_url = None
+
+    def api_get_dashboard(self, uid):
+        from grafana_client import GrafanaApi
+        self.api_grafana = GrafanaApi.from_url(url="{proto}://{host}:{port}/".format(proto=self.proto,
+                                                                                      host=self.host,
+                                                                                      port=self.port),
+                                               credential=(self.login, self.password))
+        return self.api_grafana.dashboard.get_dashboard(uid)['meta']['url']
+
+    def get_cookie(self):
+        base_url = "{proto}://{host}:{port}/login".format(proto=self.proto,
+                                                          host=self.host,
+                                                          port=self.port)
+        data_api = {"user": self.login, "password": self.password}
+        req_cookie = requests.post(base_url, json=data_api, verify=False)
+        self.cookie = []
+
+        for name, value in req_cookie.cookies.items():
+            self.cookie.append(dict(name=name, value=value))
+
+        return self.cookie

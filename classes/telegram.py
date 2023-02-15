@@ -23,7 +23,7 @@ from config import *
 class Telegram:
 
 
-    def __init__(self, logger, send_to: str, send_from: str, chart_png, message: str, keyboard: bool,
+    def __init__(self, logger, send_to: str, chart_png, message: str, keyboard: bool,
                  token: str = None, proxy=False, disable_notification=False):
         self.logger = logger
         self.send_to = send_to

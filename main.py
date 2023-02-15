@@ -14,7 +14,6 @@ from config import *
 from classes.integration import ZabbixReq
 from classes.handlers import ZNT
 from classes.telegram import Telegram
-import classes.render_grafana as Grafana
 
 import sys
 from classes.logger import Log
@@ -31,7 +30,6 @@ def main():
     #                                                       send_config.__dict__))
 
     znt = ZNT(logger=logger, bots=bot_config, zabbix_req=zabbix_req,  preferences=send_config.preferences)
-
 
     send_message = Telegram(token=znt.bot,
                             proxy=znt.proxy,

@@ -12,6 +12,7 @@ import re
 import html
 import io
 from PIL import Image, ImageDraw, ImageFont
+import classes.render_grafana as grafana
 from config import *
 
 
@@ -27,7 +28,7 @@ class ZNT:
         self.macros = preferences.zabbix.macros
         self.send = preferences.telegram.send
         self.logger = logger
-        self.zabbix_req =zabbix_req
+        self.zabbix_req = zabbix_req
         self.chart_name = None
         self.chart_period = None
         self.links = []
@@ -114,19 +115,18 @@ class ZNT:
         return
 
     def __create_chart(self):
-        # graphs_png = Grafana.RenderingPNG().get_screenshote(
-        #     url='http://192.168.1.200:3000/d/YGLp1d14k/test_dash?orgId=1&viewPanel=2',
-        #     login='admin',
-        #     password='AdminAdmin',
-        #     width=300,
-        #     height=100,
-        #     timeout_render=5)
+
         if (self.options.graphs and zabbix_graph) and not self.settings_no_graph:
+            settings_dash = next((x for x in self.zntsettings[trigger_settings_tag] if trigger_settings_tag_grafana_dash in x), None)
+
             num_items_id = [item_id for item_id in self.macros.itemid.split() if re.findall(r"\d+", item_id)]
-            if len(num_items_id) == 1:
+            if settings_dash:
+                uid = str(settings_dash.split('=')[1])
+                self.chart_png = grafana.RenderingPNG(uid).get_screenshote()
+            elif len(num_items_id) == 1:
                 self.chart_png = self.zabbix_req.get_chart_png(itemid=num_items_id[0],
-                                                          name=self.chart_name,
-                                                          period=self.chart_period)
+                                                               name=self.chart_name,
+                                                               period=self.chart_period)
             else:
                 graphs_png_group = []
                 #  get the unique itemid
@@ -381,12 +381,11 @@ class ZNT:
     def __init_bot(self):
         _default = self.bots['default']
         settings_raw = None
-        if isinstance(self.zntsettings, dict) and not all(
-                settings.find(trigger_settings_tag_bot) and len(settings) > 0 for settings in
-                self.zntsettings[trigger_settings_tag]):
+        settings_bot = next((x for x in self.zntsettings[trigger_settings_tag] if trigger_settings_tag_bot in x), None)
+        if settings_bot:
             try:
-                settings_raw = [i if i.find(trigger_settings_tag_bot) == 0 else False for i in self.zntsettings[trigger_settings_tag]][0]
-                settings = str(settings_raw.split('=')[1])
+                #settings_raw = [i if i.find(trigger_settings_tag_bot) == 0 else False for i in self.zntsettings[trigger_settings_tag]][0]
+                settings = str(settings_bot.split('=')[1])
             except Exception as err:
                 self.logger.error("Exception occurred: {}:{}, {}".format(
                     trigger_settings_tag, settings_raw, err), exc_info=config_exc_info), exit(1)

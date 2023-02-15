@@ -9,34 +9,37 @@ import time
 import requests
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
+from classes.integration import Grafana
 
 
 class RenderingPNG:
-    def __init__(self):
-        base_url = "http://192.168.1.200:3000/login"
-        data_api = {"user": "admin", "password": "AdminAdmin"}
-        req_cookie = requests.post(base_url, json=data_api, verify=False)
-        self.cookie = []
+    def __init__(self, uid):
+        self.host = '192.168.1.200'
+        self.port = '3000'
+        self.proto = 'http'
+        self.width = 1050
+        self.height = 500
+        self.timeout_render = 5
+        self.url: str = Grafana().api_get_dashboard(uid)
+        self.cookie: dict = Grafana().get_cookie()
 
-        for name, value in req_cookie.cookies.items():
-            self.cookie.append(dict(name=name, value=value))
-
-
-        req_cookie.close()
-
-    def get_screenshote(self, url, login, password, width, height, timeout_render):
-        options = Options()
-        options.headless = True
-        options.add_argument("-kiosk")
-        driver = webdriver.Chrome(options=webdriver.ChromeOptions(), executable_path=r'C:\Users\xxsok\PycharmProjects\znt\files\bdriver\yandexdriver.exe')
-        driver.get('http://192.168.1.200:3000/')
+    def get_screenshote(self):
+        options = webdriver.ChromeOptions()
+        # options.add_argument("--headless")
+        # options.add_argument("--kiosk")
+        options.add_argument("--disable-extensions")
+        driver = webdriver.Chrome(options=options, executable_path=r'C:\Users\xxsok\PycharmProjects\znt\files\bdriver\yandexdriver.exe')
+        driver.get("{proto}://{host}:{port}/login".format(proto=self.proto,
+                                                          host=self.host,
+                                                          port=self.port))
         for x in self.cookie:
             driver.add_cookie(x)
-        driver.get('http://192.168.1.200:3000/d/YGLp1d14k/test_dash?orgId=1&from=now-3h&viewPanel=2&kiosk')
+        driver.get('{proto}://{host}:{port}{url}?orgId=1&from=now-3h&viewPanel=2&kiosk'.format(
+            proto=self.proto, host=self.host, port=self.port, url=self.url))
+        # driver.quit()
         driver.set_window_position(0, 0)
-        driver.set_window_size(width, height)
+        driver.set_window_size(self.width, self.height)
 
-        # time.sleep(timeout_render)
         title = driver.title
         png = driver.get_screenshot_as_png()
         driver.quit()
