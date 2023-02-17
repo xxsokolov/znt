@@ -5,3 +5,4 @@ config.py
 *.log
 *.cache
 *.backup
+*.exe
