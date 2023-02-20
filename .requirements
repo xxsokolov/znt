@@ -1,6 +1,5 @@
-pyTelegramBotAPI
-py-zabbix
-urllib3
+requests
 pillow
-pysocks
-yaml
+selenium
+pyTelegramBotAPI
+pyyaml

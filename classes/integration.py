@@ -10,6 +10,7 @@ __maintainer__ = "Sokolov Dmitry"
 __license__ = "MIT"
 import requests
 import urllib3
+from grafana_client import GrafanaApi
 from typing import Union
 from config import *
 
@@ -69,7 +70,6 @@ class Grafana:
 
     def api_get_dashboard(self, uid) -> Union[bool, str]:
         try:
-            from grafana_client import GrafanaApi
             self.api_grafana = GrafanaApi.from_url(url="{proto}://{host}:{port}/".format(proto=self.proto,
                                                                                          host=self.host,
                                                                                          port=self.port),
