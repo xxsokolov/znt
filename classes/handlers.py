@@ -29,19 +29,19 @@ class ZNT:
         self.send = preferences.telegram.send
         self.logger = logger
         self.zabbix_req = zabbix_req
-        self.chart_name = None
-        self.chart_period = None
-        self.links = []
-        self.tags = None
-        self.zntsettings = None
-        self.settings_no_graph = False
-        self.settings_no_alert = False
-        self.settings_not_notify = False
-        self.mentions = None
-        self.chart_png = None
-        self.message = None
+        self.chart_name: str
+        self.chart_period: int
+        self.links: list = []
+        self.tags: list = []
+        self.zntsettings: dict = {}
+        self.settings_no_graph: bool = False
+        self.settings_no_alert: bool = False
+        self.settings_not_notify: bool = False
+        self.mentions: list = []
+        self.chart_png: list = []
+        self.message: str
         self.bots = bots['bots']
-        self.bot = None
+        self.bot: str = ''
         self.proxy = None
         self.__create_settings_list()
         self.__handling_settings()
@@ -53,7 +53,8 @@ class ZNT:
         self.__create_tags()
         self.__create_mentions_list()
         self.__create_chart()
-        self.__watermark_text()
+        if self.chart_png:
+            self.__watermark_text()
         self.__create_message()
 
     def __create_message(self):
@@ -87,58 +88,53 @@ class ZNT:
         return
 
     def __watermark_text(self):
-        img = io.BytesIO(self.chart_png['img'])
-        img = Image.open(img).convert("RGBA")
+        new_chart_png = []
+        for chart in self.chart_png:
 
-        if img.height < watermark_minimal_height:
-            self.logger.info(
-                "Cannot set watermark text, img height {} (min. {})".format(img.height, watermark_minimal_height))
-            return False
-        font = ImageFont.truetype("arial.ttf", 14)
+            img = io.BytesIO(chart)
+            img = Image.open(img).convert("RGBA")
 
-        line_height = sum(font.getmetrics())
+            if img.height < watermark_minimal_height:
+                self.logger.info(
+                    "Cannot set watermark text, img height {} (min. {})".format(img.height, watermark_minimal_height))
+                return False
+            font = ImageFont.truetype("arial.ttf", 14)
 
-        txt = Image.new('RGBA', (font.getsize(watermark_label)[0], line_height))
+            line_height = sum(font.getmetrics())
 
-        ImageDraw.Draw(txt).text((0, 0), watermark_label, fill=watermark_fill, font=font)
+            txt = Image.new('RGBA', (font.getsize(watermark_label)[0], line_height))
 
-        txt = txt.rotate(watermark_rotate, resample=Image.BICUBIC, expand=True)
+            ImageDraw.Draw(txt).text((0, 0), watermark_label, fill=watermark_fill, font=font)
 
-        img_size = img.crop().size
-        size = (img_size[0] - txt.size[0] - 10, img_size[1] - txt.size[1] - 5)
-        img.paste(watermark_text_color, box=size, mask=txt)
+            txt = txt.rotate(watermark_rotate, resample=Image.BICUBIC, expand=True)
 
-        img_byte_arr = io.BytesIO()
-        img.save(img_byte_arr, format='PNG')
-        img_byte_arr = img_byte_arr.getvalue()
-        self.chart_png['img'] = img_byte_arr
+            img_size = img.crop().size
+            size = (img_size[0] - txt.size[0] - 10, img_size[1] - txt.size[1] - 5)
+            img.paste(watermark_text_color, box=size, mask=txt)
+
+            img_byte_arr = io.BytesIO()
+            img.save(img_byte_arr, format='PNG')
+            img_byte_arr = img_byte_arr.getvalue()
+            new_chart_png.append(img_byte_arr)
+        self.chart_png.clear()
+        self.chart_png = new_chart_png
         return
 
     def __create_chart(self):
-
         if (self.options.graphs and zabbix_graph) and not self.settings_no_graph:
-            settings_dash = next((x for x in self.zntsettings[trigger_settings_tag] if trigger_settings_tag_grafana_dash in x), None)
-
-            num_items_id = [item_id for item_id in self.macros.itemid.split() if re.findall(r"\d+", item_id)]
+            settings_dash = next(
+                (x for x in self.zntsettings[trigger_settings_tag] if trigger_settings_tag_grafana_dash in x), None)
             if settings_dash:
+                # Добавляем рендер дашборда Графаны
                 uid = str(settings_dash.split('=')[1])
-                self.chart_png = grafana.RenderingPNG(uid).get_screenshote()
-            elif len(num_items_id) == 1:
-                self.chart_png = self.zabbix_req.get_chart_png(itemid=num_items_id[0],
-                                                               name=self.chart_name,
-                                                               period=self.chart_period)
-            else:
-                graphs_png_group = []
-                #  get the unique itemid
-                for item_id in list(set([x for x in self.macros.itemid.split()])):
-                    if re.findall(r"\d+", item_id):
-                        graphs_png_group.append(InputMediaPhoto(zabbix_api.get_chart_png(itemid=item_id,
-                                                                                         graff_name=graphs_name,
-                                                                                         period=graph_period).get(
-                            'img')))
-                self.chart_png = graphs_png_group
-        else:
-            self.chart_png = False
+                png = grafana.RenderingPNG(uid=uid, logger=self.logger).get_screenshot()
+                if png:
+                    self.chart_png.append(png)
+            # Добавляем графики на основании itemid из экшена
+            for item_id in list(set([x for x in self.macros.itemid.split()])):
+                if re.findall(r"\d+", item_id):
+                    self.chart_png.append(self.zabbix_req.get_chart_png(itemid=item_id, name=self.chart_name,
+                                                                        period=self.chart_period))
 
     def __create_links(self):
         # trigger url

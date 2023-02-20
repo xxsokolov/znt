@@ -6,62 +6,62 @@
 ########################
 # https://github.com/xxsokolov/znt
 import time
-import requests
+from typing import Union
+
 from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from classes.integration import Grafana
 
 
 class RenderingPNG:
-    def __init__(self, uid):
+    def __init__(self, uid, logger):
         self.host = '192.168.1.200'
         self.port = '3000'
         self.proto = 'http'
         self.width = 1050
         self.height = 500
         self.timeout_render = 5
-        self.url: str = Grafana().api_get_dashboard(uid)
-        self.cookie: dict = Grafana().get_cookie()
+        self.logger = logger
+        self.url: str = Grafana(self.logger).api_get_dashboard(uid)
+        if self.url:
+            self.cookie: list = Grafana(self.logger).get_cookie()
 
-    def get_screenshote(self):
-        options = webdriver.ChromeOptions()
+    def get_screenshot(self) -> Union[bool, bytes]:
+        if self.url and self.cookie:
+            options = webdriver.ChromeOptions()
+            opt = '''
+            --noerrdialogs --disable-infobars --disable-features 
+            --ignore-certificate-errors --test-type --enable-features=WebUIDarkMode --force-dark-mode 
+            --enable-oop-rasterization --force-gpu-rasterization --enable-native-gpu-memory-buffers 
+            --enable-gpu-rasterization --enable-oop-rasterization-ddl --use-skia-deferred-display-list 
+            --disable-translate'''
+            for x in opt.split():
+                options.add_argument(x)
+            driver = webdriver.Chrome(options=options, executable_path=r'C:\Users\xxsok\PycharmProjects\znt\files\bdriver\chromedriver.exe', keep_alive=3)
+            driver.get("{proto}://{host}:{port}/login".format(proto=self.proto,
+                                                              host=self.host,
+                                                              port=self.port))
+            for x in self.cookie:
+                driver.add_cookie(x)
+            driver.get('{proto}://{host}:{port}{url}?orgId=1&from=now-3h&kiosk'.format(
+                proto=self.proto, host=self.host, port=self.port, url=self.url))
 
-        opt = '''
-        --noerrdialogs --disable-infobars --disable-features 
-        --ignore-certificate-errors --test-type --enable-features=WebUIDarkMode --force-dark-mode 
-        --enable-oop-rasterization --force-gpu-rasterization --enable-native-gpu-memory-buffers 
-        --enable-gpu-rasterization --enable-oop-rasterization-ddl --use-skia-deferred-display-list 
-        --disable-translate'''
-        for x in opt.split():
-            options.add_argument(x)
-        driver = webdriver.Chrome(options=options, executable_path=r'C:\Users\xxsok\PycharmProjects\znt\files\bdriver\chromedriver.exe', keep_alive=3)
-        driver.get("{proto}://{host}:{port}/login".format(proto=self.proto,
-                                                          host=self.host,
-                                                          port=self.port))
-        for x in self.cookie:
-            driver.add_cookie(x)
-        driver.get('{proto}://{host}:{port}{url}?orgId=1&from=now-3h&kiosk'.format(
-            proto=self.proto, host=self.host, port=self.port, url=self.url))
-
-        element = driver.find_element(By.XPATH, "//div[@class='react-grid-layout']")
-        try:
-            WebDriverWait(driver, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
-            # title = driver.title
-            # png = driver.get_screenshot_as_png()
-        except TimeoutException:
-            print("Loading took too much time!")
-            return False
+            try:
+                element = driver.find_element(By.XPATH, "//div[@class='react-grid-layout']")
+                WebDriverWait(driver, 10).until(lambda driver: driver.execute_script('return document.readyState') == 'complete')
+                time.sleep(2)
+                png = element.screenshot_as_png
+            except Exception as err:
+                print("Ошибка рендеринга дашборда.\n{}".format(err))
+                return False
+            else:
+                return png
+            finally:
+                driver.quit()
         else:
-            element.screenshot(r'C:\Users\xxsok\PycharmProjects\znt\files\test.png')
-            png = element.screenshot_as_png
-            return dict(img=png)
-        finally:
-            driver.quit()
-
+            return False
 
 
         # element = driver.find_element(By.XPATH, "//div[@class='react-grid-layout']")
