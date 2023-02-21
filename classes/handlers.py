@@ -24,7 +24,7 @@ class FailSafeDict(dict):
 class ZNT:
 
     def __init__(self, bots, zabbix_req, preferences, logger):
-        self.options = preferences.znt.options
+        self.options = preferences.api.options
         self.macros = preferences.zabbix.macros
         self.send = preferences.telegram.send
         self.logger = logger

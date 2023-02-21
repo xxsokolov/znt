@@ -14,6 +14,7 @@ from config import *
 from classes.integration import ZabbixReq
 from classes.handlers import ZNT
 from classes.telegram import Telegram
+import classes.api as api
 
 import sys
 from classes.logger import Log
@@ -35,7 +36,7 @@ def main():
                             proxy=znt.proxy,
                             send_to=args.Username,
                             message=znt.message,
-                            keyboard=send_config.preferences.znt.options.keyboard,
+                            keyboard=send_config.preferences.api.options.keyboard,
                             chart_png=znt.chart_png,
                             disable_notification=znt.settings_not_notify,
                             logger=logger)
@@ -44,13 +45,17 @@ def main():
 if __name__ == "__main__":
     args = ArgParsing()
     args = args.create_parser().parse_args(sys.argv[1:])
-    logger = Log(False if not args.debug else True).log
 
+    logger = Log(False if not args.debug else True).log
     if args.command == 'zabbix':
         pass
+    elif args.command == 'api':
+        api.run()
     elif args.command == 'console':
-        #main_config = ReadYaml(logger=logger, args=args).read_yaml()
         send_config = ReadYaml(logger=logger, path=args.SendConfigYaml).read_yaml()
         bot_config = ReadYaml(logger=logger, path=args.BotConfigYaml).read_bots_yaml()
         zabbix_req = ZabbixReq(logger=logger, url=zabbix_api_url, login=zabbix_api_login, password=zabbix_api_pass, chart=zabbix_graph_chart)
         main()
+# @app.get("send")
+#main_config = ReadYaml(logger=logger, args=args).read_yaml()
+

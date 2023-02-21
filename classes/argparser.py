@@ -24,6 +24,7 @@ class ArgParsing:
         #self.file_mode_parser = None
         #self.discovery_mode_parser = None
         self.zabbix = None
+        self.api = None
         self.console = None
         self.init = None
 
@@ -41,6 +42,11 @@ class ArgParsing:
         self.zabbix.add_argument('username', nargs='?', help='Set username Telegram')
         # self.zabbix.add_argument('--MainConfigYaml',default='.main_config.yaml', required=False, type=str)
         self.zabbix.add_argument('--debug', type=str, nargs='?', const=True, default=False, help='Debug mode')
+
+        self.api = self.subparsers.add_parser('api')
+        self.api.add_argument('username', nargs='?', help='Set username Telegram')
+        # self.zabbix.add_argument('--MainConfigYaml',default='.main_config.yaml', required=False, type=str)
+        self.api.add_argument('--debug', type=str, nargs='?', const=True, default=False, help='Debug mode')
 
         self.console = self.subparsers.add_parser('console')
         #self.console.add_argument('--MainConfigYaml',default='.main_config.yaml', required=False, type=str)
