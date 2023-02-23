@@ -36,7 +36,7 @@ def main():
                             proxy=znt.proxy,
                             send_to=args.Username,
                             message=znt.message,
-                            keyboard=send_config.preferences.znt.options.keyboard,
+                            keyboard=send_config.preferences.api.options.keyboard,
                             chart_png=znt.chart_png,
                             disable_notification=znt.settings_not_notify,
                             logger=logger)
