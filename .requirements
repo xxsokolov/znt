@@ -3,3 +3,5 @@ pillow
 selenium
 pyTelegramBotAPI
 pyyaml
+fastapi
+uvicorn[standard]
