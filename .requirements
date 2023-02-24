@@ -2,6 +2,7 @@ requests
 pillow
 selenium
 pyTelegramBotAPI
+grafana_client
 pyyaml
 fastapi
 uvicorn[standard]

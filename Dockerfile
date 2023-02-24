@@ -1,20 +1,12 @@
-FROM python:3.10
-MAINTAINER Luke Crooks "luke@pumalo.org"
+FROM python:3.9
+LABEL maintainer="Dmitry Sokolov xx.sokolov@gmail.com"
+LABEL version="2.0"
+ARG workdir=/opt/znt
 
-#RUN pip install --upgrade pip
-#WORKDIR /opt/app/znt
-
-WORKDIR /home/app/znt
-RUN mkdir -p /home/app/znt
-RUN cd /home/app/znt
-RUN git clone https://github.com/xxsokolov/znt.git .
-
-RUN dir /home/app/znt
-RUN ls -la /home/app/znt
-RUN python -m venv venv
+RUN mkdir -p $workdir
+WORKDIR $workdir
 RUN pip install --upgrade pip
-RUN ls .
-RUN ["/bin/bash", "-c", "source venv/bin/activate"]
-RUN pip install -r /home/app/znt/.requirements
-CMD ["/bin/bash"]
+COPY . .
+RUN pip install --no-cache-dir --upgrade -r $workdir/.requirements
+ENTRYPOINT ["python", "znt.py", "api"]
 
