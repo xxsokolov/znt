@@ -1,4 +1,5 @@
 from fastapi import Depends, HTTPException, APIRouter
+from fastapi.responses import JSONResponse, Response
 from sqlalchemy.orm import Session
 
 from .. import crud, models, schemas
@@ -26,10 +27,20 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     return crud.create_user(db=db, user=user)
 
 
-@router.get("/users/", response_model=list[schemas.User])
-def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    users = crud.get_users(db, skip=skip, limit=limit)
-    return users
+@router.get("/bot/", response_model=list[schemas.Bot], summary="Показать всех ботов")
+def read_users(db: Session = Depends(get_db)):
+    bots = crud.get_bots(db)
+    if len(bots) == 0:
+        raise HTTPException(status_code=404, detail="Список ботов пустой")
+    return bots
+
+@router.post("/bot/", response_model=schemas.Bot, summary="Добавить бота")
+def add_bot(bot: schemas.Bot, db: Session = Depends(get_db),
+            ):
+    if crud.get_bot_by_name(db, name=bot.name):
+        raise HTTPException(status_code=400, detail="Бот {bot.name} уже существует".format(bot=bot))
+    crud.add_bot(db, bot)
+    return JSONResponse(content={"status": "Бот {name} создан".format(**bot.dict()), "detail": bot.dict()})
 
 
 @router.get("/users/{user_id}", response_model=schemas.User)
