@@ -1,14 +1,37 @@
-from datetime import datetime
+from typing import Union
+
 from pydantic import BaseModel
 
 
-''' Model Schema Using Pydantic '''
-
-
-class Post(BaseModel):
-    id: int
+class ItemBase(BaseModel):
     title: str
-    body: str
-    is_published: bool = False  # Providing a default value False
-    created: datetime = datetime.utcnow()
-    modified: datetime = datetime.utcnow()
+    description: Union[str, None] = None
+
+
+class ItemCreate(ItemBase):
+    pass
+
+
+class Item(ItemBase):
+    id: int
+    owner_id: int
+
+    class Config:
+        orm_mode = True
+
+
+class UserBase(BaseModel):
+    email: str
+
+
+class UserCreate(UserBase):
+    password: str
+
+
+class User(UserBase):
+    id: int
+    is_active: bool
+    items: list[Item] = []
+
+    class Config:
+        orm_mode = True

@@ -1,48 +1,53 @@
-from fastapi import APIRouter
-from typing import List
-from app.api.znt.config import database
-import secrets
+from fastapi import Depends, HTTPException, APIRouter
+from sqlalchemy.orm import Session
 
-from app.api.znt.models import posts
-from app.api.znt.schemas import Post
+from .. import crud, models, schemas
+from ..database import SessionLocal, engine
+
+models.Base.metadata.create_all(bind=engine)
 
 router = APIRouter()
 
 
-@router.get("/posts", response_model=List[Post], status_code=200)
-async def all_posts():
-    query = posts.select()
-    all_posts = await database.fetch_all(query)
-    if posts is None:
-        return {"message": " No post found!"}
-    else:
-        return all_posts
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
-@router.get("/post/{id}", response_model=Post, status_code=200)
-async def get_post(id:int):
-    query = posts.select().where(posts.c.id == id)
-    return await database.fetch_one(query=query)
+@router.post("/users/", response_model=schemas.User)
+def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    db_user = crud.get_user_by_email(db, email=user.email)
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    return crud.create_user(db=db, user=user)
 
 
-@router.post("/create/", response_model=Post, status_code=201)
-async def create(post: Post):
-    query = posts.insert().values(title=post.title, body=post.body, is_published=post.is_published,
-                                  created=post.created, modified=post.modified)
-    last_record_id = await database.execute(query=query)
-    return {**post.dict(), "id": last_record_id}
+@router.get("/users/", response_model=list[schemas.User])
+def read_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    users = crud.get_users(db, skip=skip, limit=limit)
+    return users
 
 
-@router.patch("/update/{id}", response_model=Post)
-async def update(id:int, post: Post):
-    query = posts.update().where(posts.c.id == id).values(title=post.title, body=post.body,
-                                                          is_published=post.is_published, created=post.created,
-                                                          modified=post.modified)
-    last_record_id = await database.execute(query=query)
-    return {**post.dict(), "id": last_record_id}
+@router.get("/users/{user_id}", response_model=schemas.User)
+def read_user(user_id: int, db: Session = Depends(get_db)):
+    db_user = crud.get_user(db, user_id=user_id)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
 
 
-@router.delete("/delete/{id}", response_model=Post)
-async def delete(id:int):
-    query = posts.delete().where(posts.c.id == id)
-    return await database.execute(query)
+@router.post("/users/{user_id}/items/", response_model=schemas.Item)
+def create_item_for_user(
+    user_id: int, item: schemas.ItemCreate, db: Session = Depends(get_db)
+):
+    return crud.create_user_item(db=db, item=item, user_id=user_id)
+
+
+@router.get("/items/", response_model=list[schemas.Item])
+def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    items = crud.get_items(db, skip=skip, limit=limit)
+    return items
