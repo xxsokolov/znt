@@ -9,19 +9,19 @@
 __author__ = "Sokolov Dmitry"
 __maintainer__ = "Sokolov Dmitry"
 __license__ = "MIT"
-from classes.argparser import ArgParsing
-from config import *
-from classes.integration import ZabbixReq
-from classes.handlers import ZNT
-from classes.telegram import Telegram
-import classes.api as api
+from app.classes.argparser import ArgParsing
+from app.config import *
+from app.classes.integration import ZabbixReq
+from app.classes.handlers import ZNT
+from app.classes.telegram import Telegram
+import znt_api as api
 
 import sys
-from classes.logger import Log
-from classes.parameters import ReadYaml
+from app.classes.logger import Log
+from app.classes.parameters import ReadParam
 
 
-def main():
+def telegram():
     graph_period = None
     graph_period_raw = None
     logger.info("Send to '{}' action: '{}'".format(args.Username, send_config.preferences.telegram.send.message.header))
@@ -36,7 +36,7 @@ def main():
                             proxy=znt.proxy,
                             send_to=args.Username,
                             message=znt.message,
-                            keyboard=send_config.preferences.api.options.keyboard,
+                            keyboard=send_config.preferences.znt.options.keyboard,
                             chart_png=znt.chart_png,
                             disable_notification=znt.settings_not_notify,
                             logger=logger)
@@ -45,17 +45,16 @@ def main():
 if __name__ == "__main__":
     args = ArgParsing()
     args = args.create_parser().parse_args(sys.argv[1:])
-
     logger = Log(False if not args.debug else True).log
     if args.command == 'zabbix':
         pass
     elif args.command == 'api':
         api.run()
     elif args.command == 'console':
-        send_config = ReadYaml(logger=logger, path=args.SendConfigYaml).read_yaml()
-        bot_config = ReadYaml(logger=logger, path=args.BotConfigYaml).read_bots_yaml()
+        send_config = ReadParam(logger=logger, path=args.SendConfigYaml).read_yaml()
+        bot_config = ReadParam(logger=logger, path=args.BotConfigYaml).read_bots_yaml()
         zabbix_req = ZabbixReq(logger=logger, url=zabbix_api_url, login=zabbix_api_login, password=zabbix_api_pass, chart=zabbix_graph_chart)
-        main()
+        telegram()
 # @app.get("send")
 #main_config = ReadYaml(logger=logger, args=args).read_yaml()
 

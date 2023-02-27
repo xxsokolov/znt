@@ -6,7 +6,6 @@
 ########################
 # https://github.com/xxsokolov/znt
 import sys
-from config import *
 import logging
 
 
@@ -26,12 +25,12 @@ class Log:
         stdout_handler.setLevel(self.log_level)
         stdout_handler.setFormatter(log_format)
 
-        file_handler = logging.FileHandler(filename=config_log_file, mode='a')
-        file_handler.setLevel(self.log_level)
-        file_handler.setFormatter(log_format)
+        # file_handler = logging.FileHandler(filename=config_log_file, mode='a')
+        # file_handler.setLevel(self.log_level)
+        # file_handler.setFormatter(log_format)
 
         self.log.addHandler(stdout_handler)
-        self.log.addHandler(file_handler)
+        # self.log.addHandler(file_handler)
 
     def close_file_handler(self):
         for handler in self.log.root.handlers[:]:

@@ -14,11 +14,9 @@ import json
 import shutil
 import time
 from errno import ENOENT
-from types import SimpleNamespace
 from telebot import TeleBot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
 from telebot import apihelper
-from config import *
 
 
 class Telegram:
@@ -36,6 +34,7 @@ class Telegram:
         self.bot = TeleBot(token)
         if isinstance(proxy, dict):
             apihelper.proxy = json.loads(proxy)
+        self.response_tg = None
         self.__send_messages()
 
     def get_cache(self, chat_name: str = None, chat_id: str = None):
@@ -112,6 +111,7 @@ class Telegram:
 
     def get_send_id(self):
         try:
+            raise Exception('test err')
             chat = None
             if re.search('^[0-9]+$', self.send_to) or re.search('^-[0-9]+$', self.send_to):
                 self.chat_id = self.send_to
@@ -130,7 +130,7 @@ class Telegram:
                 return
 
             self.logger.info("Опрашиваем бота о чате (getUpdate)")
-            get_updates_list = self.bot.get_updates(timeout=10)
+            get_updates_list = self.bot.get_updates(timeout=3)
             sum_del_update_id = 0
             while len([value.update_id for value in get_updates_list]) >= 100:
                 sum_del_update_id += len([value.update_id for value in get_updates_list])
@@ -175,7 +175,10 @@ class Telegram:
                     bot=self.bot.get_me().username,
                     sendto=self.chat_id))
         except Exception as err:
-            self.logger.error("Exception occurred: {}".format(err), exc_info=config_exc_info), exit(1)
+            self.logger.exception("Exception occurred: {}".format(err), exc_info=config_exc_info)
+            raise Exception from err
+        # finally:
+        #     return
 
 
     def gen_markup(self, eventid):
@@ -203,7 +206,7 @@ class Telegram:
                         self.chart_png = [InputMediaPhoto(x) for x in self.chart_png]
                         self.chart_png[0].caption = self.message
                         self.chart_png[0].parse_mode = "HTML"
-                        response_tg = self.bot.send_media_group(chat_id=self.chat_id, media=self.chart_png, disable_notification=self.disable_notification)
+                        self.response_tg = self.bot.send_media_group(chat_id=self.chat_id, media=self.chart_png, disable_notification=self.disable_notification)
                     except apihelper.ApiException as err:
                         self.logger.error(err)
                         if 'migrate_to_chat_id' in err.result_json['parameters']:
@@ -220,24 +223,24 @@ class Telegram:
                                                            'migrate_to_chat_id']))
                             self.__send_messages()
                         else:
-                            self.logger.crirical("Exception occurred in Api Telegram: {}".format(err),
+                            self.logger.critical("Exception occurred in Api Telegram: {}".format(err),
                                                  exc_info=config_exc_info)
                             raise SystemExit(1)
                     except Exception as err:
                         self.logger.critical("Exception occurred: {}".format(err), exc_info=config_exc_info)
                         raise SystemExit(1)
                     else:
-                        if not response_tg[0].chat.title == self.chat_name:
+                        if not self.response_tg[0].chat.title == self.chat_name:
                             self.logger.warning(
                                 'Вы отправляете сообщение в чат "{chat_name}", но оно имя было изменено на '
                                 '"{new_chat_name}". Измените получателя "Send to" в User -> media'.format(
-                                    chat_name=self.chat_name, new_chat_name=response_tg.chat.title))
+                                    chat_name=self.chat_name, new_chat_name=self.response_tg.chat.title))
                         self.logger.info('Bot @{bot_name}({bot_id}) send media group to "{chat_name}" ({chat_id}).'.format(
                             chat_name=self.chat_name, chat_id=self.chat_id, bot_name=self.bot.get_me().username,
                             bot_id=self.bot.get_me().id))
                 elif self.chart_png and self.chart_png.get('img'):
                     try:
-                        response_tg = self.bot.send_photo(
+                        self.response_tg = self.bot.send_photo(
                             chat_id=self.chat_id, photo=self.chart_png.get('img'), caption=self.message,
                             parse_mode="HTML", reply_markup=gen_markup(eventid) if zabbix_keyboard and settings_keyboard else None,
                             disable_notification=self.disable_notification)
@@ -256,24 +259,24 @@ class Telegram:
                                                        update_value=err.result_json['parameters']['migrate_to_chat_id']))
                             self.__send_messages()
                         else:
-                            self.logger.crirical("Exception occurred in Api Telegram: {}".format(err),
+                            self.logger.critical("Exception occurred in Api Telegram: {}".format(err),
                                                  exc_info=config_exc_info)
                             raise SystemExit(1)
                     except Exception as err:
                         self.logger.critical("Exception occurred: {}".format(err), exc_info=config_exc_info)
                         raise SystemExit(1)
                     else:
-                        if not response_tg.chat.title == self.chat_name:
+                        if not self.response_tg.chat.title == self.chat_name:
                             self.logger.warning(
                                 'Вы отправляете сообщение в чат "{chat_name}", но оно имя было изменено на '
                                 '"{new_chat_name}". Измените получателя "Send to" в User -> media'.format(
-                                    chat_name=self.chat_name, new_chat_name=response_tg.chat.title))
+                                    chat_name=self.chat_name, new_chat_name=self.response_tg.chat.title))
                         self.logger.info('Bot @{bot_name}({bot_id}) send photo to "{chat_name}" ({chat_id}).'.format(
                             chat_name=self.chat_name, chat_id=self.chat_id, bot_name=self.bot.get_me().username,
                             bot_id=self.bot.get_me().id))
                 else:
                     try:
-                        response_tg = self.bot.send_message(
+                        self.response_tg = self.bot.send_message(
                             chat_id=self.chat_id, text=self.message, parse_mode="HTML", disable_web_page_preview=True,
                             reply_markup=gen_markup(eventid) if zabbix_keyboard and settings_keyboard else None,
                             disable_notification=self.disable_notification)
@@ -294,21 +297,20 @@ class Telegram:
                                                        update_value=err.result_json['parameters']['migrate_to_chat_id']))
                             self.__send_messages()
                         else:
-                            self.logger.crirical("Exception occurred in Api Telegram: {}".format(err),
+                            self.logger.critical("Exception occurred in Api Telegram: {}".format(err),
                                                  exc_info=config_exc_info)
                             raise SystemExit(1)
                     except Exception as err:
                         self.logger.error("Exception occurred: {}".format(err), exc_info=config_exc_info), exit(1)
                     else:
-                        if not response_tg.chat.title == self.chat_name:
+                        if not self.response_tg.chat.title == self.chat_name:
                             self.logger.warning('Вы отправляете сообщение в чат "{chat_name}", но оно было изменено на '
                                                 '"{new_chat_name}". Измените получателя "Send to" в '
                                                 'User -> media'.format(chat_name=self.chat_name,
-                                                                       new_chat_name=response_tg.chat.title))
+                                                                       new_chat_name=self.response_tg.chat.title))
                         self.logger.info('Bot @{bot_name}({bot_id}) send message to "{chat_name}" ({chat_id}).'.format(
                             chat_name=self.chat_name, chat_id=self.chat_id, bot_name=self.bot.get_me().username,
                             bot_id=self.bot.get_me().id))
-                        exit(0)
         except Exception as err:
-            self.logger.crirical("Exception occurred: {}".format(err), exc_info=config_exc_info)
+            self.logger.critical("Exception occurred: {}".format(err), exc_info=config_exc_info)
             raise SystemExit(1)

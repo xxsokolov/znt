@@ -11,8 +11,7 @@ from typing import Union
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
-from selenium.common.exceptions import TimeoutException
-from classes.integration import Grafana
+from app.classes.integration import Grafana
 
 
 class RenderingPNG:
@@ -39,7 +38,7 @@ class RenderingPNG:
             --disable-translate'''
             for x in opt.split():
                 options.add_argument(x)
-            driver = webdriver.Chrome(options=options, executable_path=r'C:\Users\xxsok\PycharmProjects\znt\files\bdriver\chromedriver.exe', keep_alive=3)
+            driver = webdriver.Chrome(options=options, executable_path=r'/files/bdriver/chromedriver.exe', keep_alive=3)
             driver.get("{proto}://{host}:{port}/login".format(proto=self.proto,
                                                               host=self.host,
                                                               port=self.port))

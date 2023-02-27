@@ -14,10 +14,11 @@ import json
 from types import SimpleNamespace
 
 
-class ReadYaml:
+class ReadParam:
 
-    def __init__(self, logger, path):
+    def __init__(self, logger, path=None, json=None):
         self.path = path
+        self.json = json
         self.namespace = None
         self.dict = None
         self.logger = logger
@@ -29,6 +30,12 @@ class ReadYaml:
         data = yaml.load(stream=yyy, Loader=yaml.FullLoader)
         #self.namespace = json.loads(json.dumps(data), object_hook=lambda item: SimpleNamespace(**item))
         return data
+
+    def read_api_mode(self):
+        self.logger.debug('Получаем параметры запуска')
+        # yyy = self.args.parameters.replace("\\r\\n", "\n")
+        self.namespace = json.loads(json.dumps(self.json), object_hook=lambda item: SimpleNamespace(**item))
+        return self.namespace
 
     def read_yaml(self) -> SimpleNamespace:
         self.logger.debug('Чтение yaml файла {}'.format(self.path))

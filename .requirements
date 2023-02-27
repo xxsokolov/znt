@@ -6,3 +6,5 @@ grafana_client
 pyyaml
 fastapi
 uvicorn[standard]
+asyncpg
+psycopg2

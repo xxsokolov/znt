@@ -12,8 +12,7 @@ import re
 import html
 import io
 from PIL import Image, ImageDraw, ImageFont
-import classes.render_grafana as grafana
-from config import *
+import app.classes.render_grafana as grafana
 
 
 class FailSafeDict(dict):
@@ -24,7 +23,7 @@ class FailSafeDict(dict):
 class ZNT:
 
     def __init__(self, bots, zabbix_req, preferences, logger):
-        self.options = preferences.api.options
+        self.options = preferences.znt.options
         self.macros = preferences.zabbix.macros
         self.send = preferences.telegram.send
         self.logger = logger
