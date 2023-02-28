@@ -1,9 +1,10 @@
-from fastapi import Depends, HTTPException, APIRouter
-from fastapi.responses import JSONResponse, Response
+from fastapi import Depends, APIRouter
 from sqlalchemy.orm import Session
 
-from .. import crud, models, schemas
-from ..database import SessionLocal, engine
+from app.schemas import schemas
+from app.models import models
+from app.cruds import crud
+from app.databases.database import SessionLocal, engine
 
 models.Base.metadata.create_all(bind=engine)
 

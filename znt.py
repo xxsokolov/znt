@@ -9,16 +9,16 @@
 __author__ = "Sokolov Dmitry"
 __maintainer__ = "Sokolov Dmitry"
 __license__ = "MIT"
-from app.classes.argparser import ArgParsing
-from app.config import *
-from app.classes.integration import ZabbixReq
-from app.classes.handlers import ZNT
-from app.classes.telegram import Telegram
-import znt_api as api
+
+from classes.argparser import ArgParsing
+from classes.integration import ZabbixReq
+from classes.handlers import ZNT
+from classes.telegram import Telegram
+from config import *
 
 import sys
-from app.classes.logger import Log
-from app.classes.parameters import ReadParam
+from classes.logger import Log
+from classes.parameters import ReadParam
 
 
 def telegram():
@@ -48,8 +48,8 @@ if __name__ == "__main__":
     logger = Log(False if not args.debug else True).log
     if args.command == 'zabbix':
         pass
-    elif args.command == 'api':
-        api.run()
+    # elif args.command == 'api':
+    #     api.run()
     elif args.command == 'console':
         send_config = ReadParam(logger=logger, path=args.SendConfigYaml).read_yaml()
         bot_config = ReadParam(logger=logger, path=args.BotConfigYaml).read_bots_yaml()

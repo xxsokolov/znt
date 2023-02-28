@@ -11,7 +11,7 @@ from typing import Union
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
-from app.classes.integration import Grafana
+from classes.integration import Grafana
 
 
 class RenderingPNG:

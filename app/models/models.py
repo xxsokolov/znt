@@ -1,7 +1,7 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Enum
 from sqlalchemy.orm import relationship
-from . import schemas
-from .database import Base
+from app.schemas import schemas
+from app.databases.database import Base
 
 
 class User(Base):

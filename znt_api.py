@@ -3,17 +3,16 @@ from typing import Callable
 
 import uvicorn
 from fastapi import status
-from app.classes.logger import Log
+from classes import Log
 from pydantic import BaseModel, Field
 from fastapi import Request, Response, HTTPException, APIRouter, FastAPI
 from fastapi.routing import APIRoute
 
-from app.config import *
-from app.classes.integration import ZabbixReq
-from app.classes.handlers import ZNT
-from app.classes.telegram import Telegram
+from classes import ZabbixReq
+from classes.handlers import ZNT
+from classes import Telegram
 
-from app.classes.parameters import ReadParam
+from classes.parameters import ReadParam
 
 class SendMessage(BaseModel):
     chat_id: str = Field(default=None, description="Укажите @username или Chat Name")
@@ -134,7 +133,7 @@ def telegram(SendConfigYaml):
     graph_period = None
     graph_period_raw = None
     send_config = ReadParam(logger=logger, json=SendConfigYaml).read_api_mode()
-    bot_config = ReadParam(logger=logger, path='app/.bots.yaml').read_bots_yaml()
+    bot_config = ReadParam(logger=logger, path='.bots.yaml').read_bots_yaml()
     zabbix_req = ZabbixReq(logger=logger, url=zabbix_api_url, login=zabbix_api_login, password=zabbix_api_pass,
                            chart=zabbix_graph_chart)
     logger.info("Send to '{}' action: '{}'".format(send_config.preferences.telegram.send.chat_id, send_config.preferences.telegram.send.message.header))

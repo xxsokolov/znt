@@ -51,8 +51,8 @@ class ArgParsing:
         self.console = self.subparsers.add_parser('console')
         #self.console.add_argument('--MainConfigYaml',default='.main_config.yaml', required=False, type=str)
         self.console.add_argument('--Username', nargs='?', required=True, help='Set username Telegram')
-        self.console.add_argument('--SendConfigYaml', default='.send_config.yaml', required=False, type=str)
-        self.console.add_argument('--BotConfigYaml', default='.bots.yaml', required=False, type=str)
+        self.console.add_argument('--SendConfigYaml', default='znt.send_config.yaml', required=False, type=str)
+        self.console.add_argument('--BotConfigYaml', default='znt.bots.yaml', required=False, type=str)
         self.console.add_argument('--debug', type=str, nargs='?', const=True, default=False, help='Debug mode')
 
         self.init = self.subparsers.add_parser('init')

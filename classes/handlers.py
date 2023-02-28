@@ -12,8 +12,8 @@ import re
 import html
 import io
 from PIL import Image, ImageDraw, ImageFont
-import app.classes.render_grafana as grafana
-
+import classes.render_grafana as grafana
+from config import *
 
 class FailSafeDict(dict):
     def __missing__(self, key):

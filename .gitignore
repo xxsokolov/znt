@@ -1,7 +1,7 @@
 venv
 .idea
 .run
-app/config/config.py
+config.py
 *.yaml
 *.log
 *.cache
