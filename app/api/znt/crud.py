@@ -17,7 +17,7 @@ def get_bots(db: Session, skip: int = 0, limit: int = 100):
 def get_bot_by_name(db: Session, name: str):
     return db.query(models.Bot).filter(models.Bot.name == name).first()
 
-def add_bot(db: Session, bot: schemas.Bot):
+def add_bot(db: Session, bot: schemas.BotAdd):
     db_bot = models.Bot(**bot.dict())
     db.add(db_bot)
     db.commit()

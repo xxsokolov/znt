@@ -36,17 +36,54 @@ class User(UserBase):
     class Config:
         orm_mode = True
 
+
+
+
+
+
+
+
+class ProxyBase(BaseModel):
+    url: str
+    description: Union[str, None] = None
+
+
+class ProxyAdd(ProxyBase):
+    pass
+
+
+class Proxy(ProxyBase):
+    id: int
+    bot_id: int
+
+    class Config:
+        orm_mode = True
+
+
+
+
+
 class TypeBot(str, Enum):
     prod = "production"
     dev = "develop"
     test = "test"
-class Bot(BaseModel):
+
+
+class BotBase(BaseModel):
     name: str = None
-    type: TypeBot
+
+
+class BotAdd(BotBase):
     token: str = None
-    description: Union[str, None] = None
+    type: TypeBot
+    description: str = None
     priority: int = 0
-    proxy: Union[bool, None] = False
+
+
+class Bot(BotBase):
+    id: int
+    proxys: list[Proxy] = []
+    # proxy: Union[bool] = False
 
     class Config:
         orm_mode = True

@@ -26,6 +26,7 @@ class Item(Base):
     owner = relationship("User", back_populates="items")
 
 class Bot(Base):
+
     __tablename__ = "bot"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -34,6 +35,19 @@ class Bot(Base):
     token = Column(String, index=True, nullable=False)
     description = Column(String, default=None, index=True)
     priority = Column(Integer, default=0, index=True, nullable=False)
-    proxy = Column(String, default=False, index=True)
 
-    # owner = relationship("User", back_populates="items")
+    proxys = relationship("Proxy", back_populates="bot")
+
+
+class Proxy(Base):
+    __tablename__ = "proxy"
+
+    id = Column(Integer, primary_key=True, index=True)
+    proto = Column(String, index=True, nullable=False)
+    url = Column(String, index=True, nullable=False)
+    description = Column(String, default=None, index=True)
+
+    bot_id = Column(Integer, ForeignKey("bot.id"))
+
+    bot = relationship("Bot", back_populates="proxys")
+
