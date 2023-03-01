@@ -1,49 +1,73 @@
-from typing import Optional, NoReturn
-
-from fastapi import APIRouter, status, UploadFile, File
-
-from app import schemas
-# from app.services import (
-#     send_message
-# )
-
 from fastapi import Depends, HTTPException, APIRouter
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-# from ... import crud, models, schemas
-# from ..database import SessionLocal, engine
+from app.schemas import telegram
+from app.models import models
+from app.databases.database import SessionLocal
+from app.services.telegram import send_message
 
 
-router = APIRouter()
+telegram_router = APIRouter()
 
 
-@router.post("/telegram/sendMessage", status_code=status.HTTP_202_ACCEPTED, summary="Send message in Telegram")
-async def telegram_send_message(data: schemas.SendMessage):
-    # TODO: consider handling exception on unknown PEER_ID
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+def is_pydantic(obj: object):
+    """ Checks whether an object is pydantic. """
+    return type(obj).__class__.__name__ == "ModelMetaclass"
+
+
+@telegram_router.post("/telegram/sendMessage", response_model=telegram.Message, summary="Отправить сообщение в Telegram")
+async def telegram_send_message(schema: telegram.Message, db: Session = Depends(get_db)):
+    msg = schema.dict()
+    bots = db.query(models.Bot).outerjoin(models.Proxy, models.Bot.proxy_id == models.Proxy.id).all()
+    bot_list = []
+    for bot in bots:
+        proxy_dict = {}
+        bot_dict = {column.name: getattr(bot, column.name) for column in bot.__table__.columns}
+        if bot_dict['proxy_id']:
+            proxy_dict = {column.name: getattr(bot.proxy, column.name) for column in bot.proxy.__table__.columns}
+        bot_dict['proxy'] = proxy_dict
+        bot_list.append(bot_dict)
+
     xxx = {'preferences': {
         "telegram":
             {"send":
-                 {"bot": data.bot,
-                  "chat_id": data.chat_id,
+                 {"bot": msg['bot'],
+                  "chat_id": msg['chat_id'],
                   "charts": {
-                      "title": data.title,
-                      "period": data.period},
+                      "title": msg['title'],
+                      "period": msg['period']},
                   "message": {
-                      "header": data.header,
-                      "body": data.body}}},
+                      "header": msg['header'],
+                      "body": msg['body']}}},
         "zabbix":
             {"macros":
-                 {"hostname": data.hostname, "itemid": data.itemid, "hostid": data.hostid, "triggerid": data.triggerid,
-                  "triggerurl": data.triggerurl, "eventtags": data.eventtags, "eventid": data.eventid,
-                  "actionid": data.actionid}},
+                 {"hostname": msg['hostname'], "itemid": msg['itemid'], "hostid": msg['hostid'], "triggerid": msg['triggerid'],
+                  "triggerurl": msg['triggerurl'], "eventtags": msg['eventtags'], "eventid": msg['eventid'],
+                  "actionid": msg['actionid']}},
         "znt":
             {"options":
-                 {"graphs": data.graphs, "hostlinks": data.hostlinks, "graphlinks": data.graphlinks,
-                  "acklinks": data.acklinks, "eventlinks": data.eventlinks, "triggerlinks": data.triggerlinks,
-                  "eventtag": data.eventtag, "eventidtag": data.eventidtag, "itemidtag": data.itemidtag,
-                  "triggeridtag": data.triggeridtag, "actionidtag": data.actionidtag, "hostidtag": data.hostidtag,
-                  "zntsettingstag": data.zntsettingstag, "zntmentions": data.zntmentions, "keyboard": data.keyboard,
-                  "graphs_period": data.graphs_period}}}}
-    await send_message(xxx)
-    return
+                 {"graphs": msg['graphs'], "hostlinks": msg['hostlinks'], "graphlinks": msg['graphlinks'],
+                  "acklinks": msg['acklinks'], "eventlinks": msg['eventlinks'], "triggerlinks": msg['triggerlinks'],
+                  "eventtag": msg['eventtag'], "eventidtag": msg['eventidtag'], "itemidtag": msg['itemidtag'],
+                  "triggeridtag": msg['triggeridtag'], "actionidtag": msg['actionidtag'], "hostidtag": msg['hostidtag'],
+                  "zntsettingstag": msg['zntsettingstag'], "zntmentions": msg['zntmentions'], "keyboard": msg['keyboard'],
+                  "graphs_period": msg['graphs_period']}}}}
+
+    try:
+        response = send_message(bot_config=bot_list, send_config=xxx)
+    except Exception as err:
+        raise HTTPException(status_code=500,
+                            detail=str(err),
+                            headers={"X-Error": "znt error"})
+    else:
+        return JSONResponse(content={"status": "Собщение отправлено", "request": {**xxx, **dict(response=response.response_tg_json)}})

@@ -11,6 +11,8 @@ __license__ = "MIT"
 import re
 import html
 import io
+import types
+
 from PIL import Image, ImageDraw, ImageFont
 import classes.render_grafana as grafana
 from config import *
@@ -39,9 +41,11 @@ class ZNT:
         self.mentions: list = []
         self.chart_png: list = []
         self.message: str
-        self.bots = bots['bots']
-        self.bot: str = ''
-        self.proxy = None
+        self.bot_list: types.SimpleNamespace = bots
+        self.bot_name: str
+        self.bot_token: str
+        self.bot_proxy_use: bool
+        self.bot_proxy: types.SimpleNamespace
         self.__create_settings_list()
         self.__handling_settings()
         self.__init_bot()
@@ -374,7 +378,7 @@ class ZNT:
             self.chart_period = zabbix_graph_period_default
 
     def __init_bot(self):
-        _default = self.bots['default']
+        _default = 'production'
         settings_raw = None
         settings_bot = next((x for x in self.zntsettings[trigger_settings_tag] if trigger_settings_tag_bot in x), None)
         if settings_bot:
@@ -419,11 +423,14 @@ class ZNT:
 
         if self.send.bot and self.send.bot == 'default':
             list_priority = []
-            for bot in self.bots[_default]:
-                list_priority.append(bot['priority'])
+            for bot in self.bot_list:
+                if bot.type == _default:
+                    list_priority.append(bot.priority)
 
-            for bot in self.bots[_default]:
-                if bot['priority'] == min(list_priority):
-                    self.bot = bot['token']
-                    self.proxy = bot['proxy']
-                    self.logger.info("Отправка сообщения через приоритетного бота в ботс-файле: {}'".format(bot['bot']))
+            for bot in self.bot_list:
+                if bot.priority == min(list_priority):
+                    self.bot_name = bot.name
+                    self.bot_token = bot.token
+                    self.bot_proxy_use = bot.proxy_use
+                    self.bot_proxy = bot.proxy
+                    self.logger.info("Отправка сообщения через приоритетного бота в ботс-файле: {}'".format(bot.name))

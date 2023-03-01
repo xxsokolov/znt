@@ -1,4 +1,4 @@
-from typing import Union, Optional
+from typing import Union, Optional, List
 
 from pydantic import BaseModel
 from enum import Enum
@@ -43,23 +43,25 @@ class User(UserBase):
 
 
 
+
 class ProxyBase(BaseModel):
+    proto: str
     url: str
     description: Union[str, None] = None
 
 
-class ProxyAdd(ProxyBase):
-    pass
+# class ProxyAdd(ProxyBase):
+#     pass
 
-
+from pydantic import validator
 class Proxy(ProxyBase):
     id: int
-    bot_id: int
 
+    # @validator('id', pre=True)
+    # def _iter_to_list(cls, v):
+    #     return v
     class Config:
         orm_mode = True
-
-
 
 
 
@@ -70,23 +72,27 @@ class TypeBot(str, Enum):
 
 
 class BotBase(BaseModel):
+    id: int
     name: str = None
+    description: str = None
+    type: TypeBot
+    priority: int = 0
 
 
 class BotAdd(BotBase):
     token: str = None
-    type: TypeBot
-    description: str = None
-    priority: int = 0
 
 
 class Bot(BotBase):
-    id: int
-    proxys: list[Proxy] = []
-    # proxy: Union[bool] = False
-
+    proxy_use: bool = False
+    #proxy_id: Union[int, None] = None
+    proxy: Proxy = None
+    # @validator('proxy', pre=True)
+    # def _iter_to_list(cls, v):
+    #     return v
     class Config:
         orm_mode = True
+
 
 
 

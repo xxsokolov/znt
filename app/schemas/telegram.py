@@ -2,7 +2,7 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
-class SendMessage(BaseModel):
+class Message(BaseModel):
     chat_id: str = Field(default=None, description="Укажите @username или Chat Name")
     bot: str = Field(default='default', description="Укажите @username или Chat Name")
     title: str = Field(

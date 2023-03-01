@@ -3,7 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import inspect
 
-SQLALCHEMY_DATABASE_URL = "postgresql+psycopg2://postgres:postgrespw@localhost:32768/fastapi"
+SQLALCHEMY_DATABASE_URL = "postgresql+psycopg2://postgres:postgrespw@localhost:32770/fastapi"
 
 tg_schema = "telegram"
 meta = MetaData(schema=tg_schema)

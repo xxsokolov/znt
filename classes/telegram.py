@@ -13,17 +13,18 @@ import os
 import json
 import shutil
 import time
+import types
 from errno import ENOENT
 from telebot import TeleBot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
 from telebot import apihelper
-
+from config import *
 
 class Telegram:
 
 
     def __init__(self, logger, send_to: str, chart_png, message: str, keyboard: bool,
-                 token: str = None, proxy=False, disable_notification=False):
+                 token: str = None, proxy_use=False, proxy=None, disable_notification=False):
         self.logger = logger
         self.send_to = send_to
         self.chat_id = None
@@ -32,9 +33,10 @@ class Telegram:
         self.message = message
         self.disable_notification = disable_notification
         self.bot = TeleBot(token)
-        if isinstance(proxy, dict):
-            apihelper.proxy = json.loads(proxy)
+        if proxy_use:
+            apihelper.proxy = {proxy.proto: proxy.url}
         self.response_tg = None
+        self.response_tg_json = None
         self.__send_messages()
 
     def get_cache(self, chat_name: str = None, chat_id: str = None):
@@ -111,7 +113,7 @@ class Telegram:
 
     def get_send_id(self):
         try:
-            raise Exception('test err')
+            # raise Exception('test err')
             chat = None
             if re.search('^[0-9]+$', self.send_to) or re.search('^-[0-9]+$', self.send_to):
                 self.chat_id = self.send_to
@@ -173,12 +175,10 @@ class Telegram:
                 'Имя чата не найдено в кеш-файле. Не получен доступ или бот не добавлен в чат "{sendto}" '
                 '(Добавьте бота в чат и/или отправьте сообщение @{bot})'.format(
                     bot=self.bot.get_me().username,
-                    sendto=self.chat_id))
+                    sendto=self.send_to))
         except Exception as err:
             self.logger.exception("Exception occurred: {}".format(err), exc_info=config_exc_info)
-            raise Exception from err
-        # finally:
-        #     return
+            raise err
 
 
     def gen_markup(self, eventid):
@@ -232,12 +232,13 @@ class Telegram:
                     else:
                         if not self.response_tg[0].chat.title == self.chat_name:
                             self.logger.warning(
-                                'Вы отправляете сообщение в чат "{chat_name}", но оно имя было изменено на '
+                                'Вы отправляете сообщение в чат "{chat_name}", но имя было изменено на '
                                 '"{new_chat_name}". Измените получателя "Send to" в User -> media'.format(
                                     chat_name=self.chat_name, new_chat_name=self.response_tg.chat.title))
                         self.logger.info('Bot @{bot_name}({bot_id}) send media group to "{chat_name}" ({chat_id}).'.format(
                             chat_name=self.chat_name, chat_id=self.chat_id, bot_name=self.bot.get_me().username,
                             bot_id=self.bot.get_me().id))
+                        self.response_tg_json = [x.json for x in self.response_tg]
                 elif self.chart_png and self.chart_png.get('img'):
                     try:
                         self.response_tg = self.bot.send_photo(
@@ -268,12 +269,13 @@ class Telegram:
                     else:
                         if not self.response_tg.chat.title == self.chat_name:
                             self.logger.warning(
-                                'Вы отправляете сообщение в чат "{chat_name}", но оно имя было изменено на '
+                                'Вы отправляете сообщение в чат "{chat_name}", но имя было изменено на '
                                 '"{new_chat_name}". Измените получателя "Send to" в User -> media'.format(
                                     chat_name=self.chat_name, new_chat_name=self.response_tg.chat.title))
                         self.logger.info('Bot @{bot_name}({bot_id}) send photo to "{chat_name}" ({chat_id}).'.format(
                             chat_name=self.chat_name, chat_id=self.chat_id, bot_name=self.bot.get_me().username,
                             bot_id=self.bot.get_me().id))
+                        self.response_tg_json = [x.json for x in self.response_tg]
                 else:
                     try:
                         self.response_tg = self.bot.send_message(
@@ -311,6 +313,8 @@ class Telegram:
                         self.logger.info('Bot @{bot_name}({bot_id}) send message to "{chat_name}" ({chat_id}).'.format(
                             chat_name=self.chat_name, chat_id=self.chat_id, bot_name=self.bot.get_me().username,
                             bot_id=self.bot.get_me().id))
+                        self.response_tg_json = [x.json for x in self.response_tg]
         except Exception as err:
             self.logger.critical("Exception occurred: {}".format(err), exc_info=config_exc_info)
-            raise SystemExit(1)
+            raise err
+

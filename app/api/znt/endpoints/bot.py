@@ -22,7 +22,7 @@ def get_db():
 
 
 @bot_router.get("/bot/", response_model=list[schemas.Bot], summary="Показать всех ботов")
-def read_users(db: Session = Depends(get_db)):
+def get_bots(db: Session = Depends(get_db)):
     bots = crud.get_bots(db)
     if len(bots) == 0:
         raise HTTPException(status_code=404, detail="Список ботов пустой")
@@ -38,7 +38,7 @@ def add_bot(bot: schemas.BotAdd, db: Session = Depends(get_db),
 
 
 @bot_router.get("/bot/{name}", response_model=schemas.Bot, summary="Найти бота по имени")
-def read_bot(name: str, db: Session = Depends(get_db)):
+def get_bot_by_name(name: str, db: Session = Depends(get_db)):
     db_user = crud.get_bot_by_name(db, name=name)
     if db_user is None:
         raise HTTPException(status_code=404, detail="Бот не найден")

@@ -1,1 +1,1 @@
-from .telegram import SendMessage
+from .telegram import Message

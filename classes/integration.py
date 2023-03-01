@@ -12,6 +12,7 @@ import requests
 import urllib3
 from grafana_client import GrafanaApi
 from typing import Union
+from config import *
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
