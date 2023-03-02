@@ -9,7 +9,7 @@ from . import ReadParam
 from . import Log
 from config import *
 
-from app.cruds.crud import get_bots
+from app.cruds.bot import get_bots
 logger = Log(True).log
 
 

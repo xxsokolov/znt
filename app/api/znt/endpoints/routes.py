@@ -1,9 +1,9 @@
 from fastapi import Depends, APIRouter
 from sqlalchemy.orm import Session
 
-from app.schemas import schemas
+from app.schemas import bot
 from app.models import models
-from app.cruds import crud
+from app.cruds import bot
 from app.databases.database import SessionLocal, engine
 
 models.Base.metadata.create_all(bind=engine)

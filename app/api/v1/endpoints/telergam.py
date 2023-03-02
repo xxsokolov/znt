@@ -2,8 +2,8 @@ from fastapi import Depends, HTTPException, APIRouter
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from app.schemas import telegram
-from app.models import models
+from app import schemas, models
+
 from app.databases.database import SessionLocal
 from app.services.telegram import send_message
 
@@ -25,10 +25,10 @@ def is_pydantic(obj: object):
     return type(obj).__class__.__name__ == "ModelMetaclass"
 
 
-@telegram_router.post("/telegram/sendMessage", response_model=telegram.Message, summary="Отправить сообщение в Telegram")
-async def telegram_send_message(schema: telegram.Message, db: Session = Depends(get_db)):
+@telegram_router.post("/telegram/sendMessage", response_model=schemas.telegram.Message, summary="Отправить сообщение в Telegram")
+async def telegram_send_message(schema: schemas.telegram.Message, db: Session = Depends(get_db)):
     msg = schema.dict()
-    bots = db.query(models.Bot).outerjoin(models.Proxy, models.Bot.proxy_id == models.Proxy.id).all()
+    bots = db.query(models.bot.Bot).outerjoin(models.proxy.Proxy, models.bot.Bot.proxy_id == models.proxy.Proxy.id).all()
     bot_list = []
     for bot in bots:
         proxy_dict = {}
