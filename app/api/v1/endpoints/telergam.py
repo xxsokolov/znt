@@ -67,7 +67,7 @@ async def telegram_send_message(schema: schemas.telegram.Message, db: Session = 
         response = send_message(bot_config=bot_list, send_config=xxx)
     except Exception as err:
         raise HTTPException(status_code=500,
-                            detail=str(err),
-                            headers={"X-Error": "znt error"})
+                            detail={"type": type(err).__name__, "msg": str(err)},
+                            headers={"X-Error": "ERROR"})
     else:
         return JSONResponse(content={"status": "Собщение отправлено", "request": {**xxx, **dict(response=response.response_tg_json)}})

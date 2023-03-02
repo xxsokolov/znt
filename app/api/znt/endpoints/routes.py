@@ -2,7 +2,7 @@ from fastapi import Depends, APIRouter
 from sqlalchemy.orm import Session
 
 from app.schemas import bot
-from app.models import models
+from app.models import telegram
 from app.cruds import bot
 from app.databases.database import SessionLocal, engine
 
