@@ -1,6 +1,7 @@
 venv
 .idea
 .run
+.env
 config.py
 *.yaml
 *.log

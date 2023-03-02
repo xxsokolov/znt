@@ -9,7 +9,7 @@
 __author__ = "Sokolov Dmitry"
 __maintainer__ = "Sokolov Dmitry"
 __license__ = "MIT"
-
+import os
 import app.main
 from classes.argparser import ArgParsing
 from classes.integration import ZabbixReq
@@ -46,12 +46,15 @@ def telegram():
 if __name__ == "__main__":
     args = ArgParsing()
     args = args.create_parser().parse_args(sys.argv[1:])
-    logger = Log(False if not args.debug else True).log
+    debug_mode = bool(True if os.environ.get("DEBUG") == 'True' else False)
+    logger = Log(debug_mode).log
     if args.command == 'zabbix':
         pass
     elif args.command == 'api':
         import uvicorn
-        uvicorn.run(app.main.app, host='0.0.0.0', port=80)
+        uvicorn.run(app=app.main.app,
+                    host=os.environ.get("UVICORN_BIND_ADDRESS"),
+                    port=int(os.environ.get("UVICORN_BIND_PORT")))
     elif args.command == 'console':
         send_config = ReadParam(logger=logger, path=args.SendConfigYaml).read_yaml()
         bot_config = ReadParam(logger=logger, path=args.BotConfigYaml).read_bots_yaml()

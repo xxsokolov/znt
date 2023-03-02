@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM python:3.10
 LABEL maintainer="Dmitry Sokolov xx.sokolov@gmail.com"
 LABEL version="2.0"
 ARG workdir=/opt/znt

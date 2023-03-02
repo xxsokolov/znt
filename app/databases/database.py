@@ -1,13 +1,22 @@
 from sqlalchemy import create_engine, MetaData, schema
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.engine import URL
 from sqlalchemy import inspect
+import os
 
-SQLALCHEMY_DATABASE_URL = "postgresql+psycopg2://postgres:postgrespw@localhost:32770/fastapi"
-
-tg_schema = "telegram"
-meta = MetaData(schema=tg_schema)
-engine = create_engine(SQLALCHEMY_DATABASE_URL, encoding='UTF8', echo=True)
+url_object = URL.create(
+    "postgresql+psycopg2",
+    username=os.environ.get("ZNT_DB_USER"),
+    password=os.environ.get("ZNT_DB_PWD"),
+    host=os.environ.get("ZNT_DB_HOST"),
+    port=os.environ.get("ZNT_DB_PORT"),
+    database=os.environ.get("ZNT_DB_BASE"),
+)
+db_schema = os.environ.get("ZNT_DB_SCHEMA")
+meta = MetaData(schema=db_schema)
+debug_mode = bool(True if os.environ.get("DEBUG") == 'True' else False)
+engine = create_engine(url_object, echo=debug_mode)
 
 inspector = inspect(engine)
 all_schemas = inspector.get_schema_names()
