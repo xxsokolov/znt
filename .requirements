@@ -5,6 +5,7 @@ pyTelegramBotAPI
 grafana_client
 pyyaml
 fastapi
+sqlalchemy
 uvicorn[standard]
 asyncpg
 psycopg2
