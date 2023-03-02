@@ -172,8 +172,8 @@ class Telegram:
                     return chat.id
 
             raise ValueError(
-                'Имя чата не найдено в кеш-файле. Не получен доступ или бот не добавлен в чат "{sendto}" '
-                '(Добавьте бота в чат и/или отправьте сообщение @{bot})'.format(
+                "Имя чата не найдено в кеш-файле. Не получен доступ или бот не добавлен в чат '{sendto}' "
+                "(Добавьте бота @{bot} в чат и/или отправьте ему сообщение.)".format(
                     bot=self.bot.get_me().username,
                     sendto=self.send_to))
         except Exception as err:

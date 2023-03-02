@@ -1,6 +1,7 @@
 from typing import Union, Optional, List
+from fastapi import Query
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from enum import Enum
 
 class ItemBase(BaseModel):
@@ -73,8 +74,8 @@ class TypeBot(str, Enum):
 
 class BotBase(BaseModel):
     id: int
-    name: str = None
-    description: str = None
+    name: str = Query(regex="^(?=.{5,35}$)@[a-zA-Z0-9_]+(?:bot|Bot)")
+    description: str
     type: TypeBot
     priority: int = 0
 
