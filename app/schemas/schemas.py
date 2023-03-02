@@ -73,8 +73,7 @@ class TypeBot(str, Enum):
 
 
 class BotBase(BaseModel):
-    id: int
-    name: str = Query(regex="^(?=.{5,35}$)@[a-zA-Z0-9_]+(?:bot|Bot)")
+    name: str = Query(default=None, regex="^(?=.{5,35}$)@[a-zA-Z0-9_]+(?:bot|Bot)")
     description: str
     type: TypeBot
     priority: int = 0
@@ -85,12 +84,10 @@ class BotAdd(BotBase):
 
 
 class Bot(BotBase):
+    id: int
     proxy_use: bool = False
-    #proxy_id: Union[int, None] = None
     proxy: Proxy = None
-    # @validator('proxy', pre=True)
-    # def _iter_to_list(cls, v):
-    #     return v
+
     class Config:
         orm_mode = True
 
