@@ -10,6 +10,7 @@ __author__ = "Sokolov Dmitry"
 __maintainer__ = "Sokolov Dmitry"
 __license__ = "MIT"
 
+import app.main
 from classes.argparser import ArgParsing
 from classes.integration import ZabbixReq
 from classes.handlers import ZNT
@@ -48,8 +49,9 @@ if __name__ == "__main__":
     logger = Log(False if not args.debug else True).log
     if args.command == 'zabbix':
         pass
-    # elif args.command == 'api':
-    #     api.run()
+    elif args.command == 'api':
+        import uvicorn
+        uvicorn.run(app.main.app, host='0.0.0.0', port=80)
     elif args.command == 'console':
         send_config = ReadParam(logger=logger, path=args.SendConfigYaml).read_yaml()
         bot_config = ReadParam(logger=logger, path=args.BotConfigYaml).read_bots_yaml()

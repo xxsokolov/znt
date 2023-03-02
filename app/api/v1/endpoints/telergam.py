@@ -20,11 +20,6 @@ def get_db():
         db.close()
 
 
-def is_pydantic(obj: object):
-    """ Checks whether an object is pydantic. """
-    return type(obj).__class__.__name__ == "ModelMetaclass"
-
-
 @telegram_router.post("/telegram/sendMessage", response_model=schemas.telegram.Message, summary="Отправить сообщение в Telegram")
 async def telegram_send_message(schema: schemas.telegram.Message, db: Session = Depends(get_db)):
     msg = schema.dict()
@@ -67,7 +62,7 @@ async def telegram_send_message(schema: schemas.telegram.Message, db: Session = 
         response = send_message(bot_config=bot_list, send_config=xxx)
     except Exception as err:
         raise HTTPException(status_code=500,
-                            detail={"type": type(err).__name__, "msg": str(err)},
+                            detail={"type": type(err).__name__, "error": str(err)},
                             headers={"X-Error": "ERROR"})
     else:
         return JSONResponse(content={"status": "Собщение отправлено", "request": {**xxx, **dict(response=response.response_tg_json)}})
