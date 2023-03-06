@@ -165,10 +165,9 @@ class Telegram:
                     bot.get_updates(timeout=10, offset=-1)
                     return chat.id
 
-                if chat.type in ["private"] and chat.username == send_to.replace("@", ""):
-                    if not send_id:
-                        set_cache(send_to, chat.id, chat.type)
-                    bot.get_updates(timeout=10, offset=-1)
+                if chat.type in ["private"] and chat.username == self.chat_name.replace("@", ""):
+                    self.bot.get_updates(timeout=10, offset=-1)
+                    self.chat_id = chat.id
                     return chat.id
 
             raise ValueError(

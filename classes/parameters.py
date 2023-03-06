@@ -34,10 +34,11 @@ class ReadParam:
         #self.namespace = json.loads(json.dumps(data), object_hook=lambda item: SimpleNamespace(**item))
         return data
 
-    def read_api_mode(self):
+    def read_api_mode(self) -> SimpleNamespace:
         self.logger.debug('Получаем параметры запуска')
-        # yyy = self.args.parameters.replace("\\r\\n", "\n")
-        self.namespace = json.loads(json.dumps(self.json), object_hook=lambda item: SimpleNamespace(**item))
+        if len(self.json) < 1:
+            raise Exception("Список ботов пустой. Добавьте ботов в базу")
+        self.namespace = json.loads(json.dumps(self.json, default=str), object_hook=lambda item: SimpleNamespace(**item))
         return self.namespace
 
     def read_yaml(self) -> SimpleNamespace:

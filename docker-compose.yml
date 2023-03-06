@@ -1,0 +1,57 @@
+version: '3'
+
+services:
+  znt:
+    container_name: znt_api
+    hostname: znt_api
+    image: xxsokolov/znt_api
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+#    depends_on:
+#      - znt_db
+    networks:
+      - bridge_net
+      - external_net
+
+  znt_db:
+    container_name: znt_db
+    hostname: znt_db
+    image: library/postgres:14.1
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgrespw
+      - POSTGRES_DB=fastapi
+    volumes:
+      - app_pg_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - bridge_net
+      - external_net
+
+  selenium:
+    container_name: znt_firefox
+    hostname: znt_firefox
+    image: selenium/standalone-firefox
+    ports:
+      - "4444:4444"
+    networks:
+      - bridge_net
+
+volumes:
+  app_pg_data:
+    driver: "local"
+
+networks:
+  bridge_net:
+    name: znt_main
+    driver: bridge
+  external_net:
+    name: znt_main
+    external: true
+

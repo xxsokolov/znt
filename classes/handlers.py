@@ -17,6 +17,7 @@ from PIL import Image, ImageDraw, ImageFont
 import classes.render_grafana as grafana
 from config import *
 
+
 class FailSafeDict(dict):
     def __missing__(self, key):
         return '{{key not found: {}}}'.format(key)
@@ -91,37 +92,42 @@ class ZNT:
         return
 
     def __watermark_text(self):
-        new_chart_png = []
-        for chart in self.chart_png:
+        try:
+            new_chart_png = []
+            for chart in self.chart_png:
 
-            img = io.BytesIO(chart)
-            img = Image.open(img).convert("RGBA")
+                img = io.BytesIO(chart)
+                img = Image.open(img).convert("RGBA")
 
-            if img.height < watermark_minimal_height:
-                self.logger.info(
-                    "Cannot set watermark text, img height {} (min. {})".format(img.height, watermark_minimal_height))
-                return False
-            font = ImageFont.truetype("arial.ttf", 14)
+                if img.height < watermark_minimal_height:
+                    self.logger.info(
+                        "Cannot set watermark text, img height {} (min. {})".format(img.height, watermark_minimal_height))
+                    return False
 
-            line_height = sum(font.getmetrics())
+                font = ImageFont.load_default()
+                line_width, line_height = font.getsize(watermark_label)
 
-            txt = Image.new('RGBA', (font.getsize(watermark_label)[0], line_height))
+                txt = Image.new('RGBA', (line_width, line_height))
 
-            ImageDraw.Draw(txt).text((0, 0), watermark_label, fill=watermark_fill, font=font)
+                ImageDraw.Draw(txt).text((0, 0), watermark_label, fill=watermark_fill, font=font)
 
-            txt = txt.rotate(watermark_rotate, resample=Image.BICUBIC, expand=True)
+                txt = txt.rotate(watermark_rotate, resample=Image.BICUBIC, expand=True)
 
-            img_size = img.crop().size
-            size = (img_size[0] - txt.size[0] - 10, img_size[1] - txt.size[1] - 5)
-            img.paste(watermark_text_color, box=size, mask=txt)
+                img_size = img.crop().size
+                size = (img_size[0] - txt.size[0] - 10, img_size[1] - txt.size[1] - 5)
+                img.paste(watermark_text_color, box=size, mask=txt)
 
-            img_byte_arr = io.BytesIO()
-            img.save(img_byte_arr, format='PNG')
-            img_byte_arr = img_byte_arr.getvalue()
-            new_chart_png.append(img_byte_arr)
-        self.chart_png.clear()
-        self.chart_png = new_chart_png
-        return
+                img_byte_arr = io.BytesIO()
+                img.save(img_byte_arr, format='PNG')
+                img_byte_arr = img_byte_arr.getvalue()
+                new_chart_png.append(img_byte_arr)
+            self.chart_png.clear()
+            self.chart_png = new_chart_png
+        except Exception as err:
+            self.logger.error("Exception occurred: {}".format(err), exc_info=config_exc_info)
+            raise err
+        else:
+            return
 
     def __create_chart(self):
         if (self.options.graphs and zabbix_graph) and not self.settings_no_graph:

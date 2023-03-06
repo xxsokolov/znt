@@ -1,8 +1,10 @@
-from sqlalchemy import create_engine, MetaData, schema
+from sqlalchemy import create_engine, MetaData, text
+from sqlalchemy.schema import CreateSchema
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine import URL
 from sqlalchemy import inspect
+from app import models
 import os
 
 url_object = URL.create(
@@ -22,7 +24,9 @@ inspector = inspect(engine)
 all_schemas = inspector.get_schema_names()
 for schema in [meta.schema]:
     if schema not in all_schemas:
-        engine.execute(f"CREATE SCHEMA {schema}")
+        with engine.connect() as connection:
+            result = connection.execute(text("CREATE SCHEMA {}".format(schema)))
+
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

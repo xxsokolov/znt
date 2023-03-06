@@ -1,4 +1,6 @@
-from fastapi import Depends, HTTPException, APIRouter
+import traceback
+
+from fastapi import Depends, HTTPException, APIRouter, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
@@ -20,7 +22,8 @@ def get_db():
         db.close()
 
 
-@telegram_router.post("/telegram/sendMessage", response_model=schemas.telegram.Message, summary="Отправить сообщение в Telegram")
+@telegram_router.post("/telegram/sendMessage", status_code=status.HTTP_202_ACCEPTED,
+                      response_model=schemas.telegram.Message, summary="Отправить сообщение в Telegram")
 async def telegram_send_message(schema: schemas.telegram.Message, db: Session = Depends(get_db)):
     msg = schema.dict()
     bots = db.query(models.bot.Bot).outerjoin(models.proxy.Proxy, models.bot.Bot.proxy_id == models.proxy.Proxy.id).all()
@@ -57,12 +60,11 @@ async def telegram_send_message(schema: schemas.telegram.Message, db: Session = 
                   "triggeridtag": msg['triggeridtag'], "actionidtag": msg['actionidtag'], "hostidtag": msg['hostidtag'],
                   "zntsettingstag": msg['zntsettingstag'], "zntmentions": msg['zntmentions'], "keyboard": msg['keyboard'],
                   "graphs_period": msg['graphs_period']}}}}
-
     try:
         response = send_message(bot_config=bot_list, send_config=xxx)
     except Exception as err:
         raise HTTPException(status_code=500,
-                            detail={"type": type(err).__name__, "error": str(err)},
+                            detail={"type": type(err).__name__, "error": str(err), "at": str(traceback.format_exc())},
                             headers={"X-Error": "ERROR"})
     else:
         return JSONResponse(content={"status": "Собщение отправлено", "request": {**xxx, **dict(response=response.response_tg_json)}})

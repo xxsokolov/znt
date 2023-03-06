@@ -1,12 +1,10 @@
 from fastapi import Depends, HTTPException, APIRouter, Path
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from typing import Union, Optional, List
 
 from app import schemas, models, cruds
 from app.databases.database import SessionLocal, engine
-
-# models.Base.metadata.create_all(bind=engine)
+models.bot.Base.metadata.create_all(bind=engine)
 
 bot_router = APIRouter()
 
