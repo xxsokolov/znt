@@ -1,3 +1,4 @@
+import traceback
 import types
 from typing import Optional, NoReturn
 
@@ -35,6 +36,7 @@ def send_message(bot_config, send_config):
                        proxy_use=znt.bot_proxy_use,
                        logger=logger)
     except Exception as err:
+        print(traceback.print_exc())
         raise err
     else:
         return xx

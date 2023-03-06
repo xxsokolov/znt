@@ -13,13 +13,25 @@ import os
 import json
 import shutil
 import time
-import types
-from errno import ENOENT
+
+from app.api.znt.endpoints import chat
+
 from telebot import TeleBot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
 from telebot import apihelper
+
+from app.databases.database import SessionLocal, engine
+# from sqlalchemy.orm import Session
+from app import models
+from classes.pgsql_connector import DBConnector
 from config import *
 
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 class Telegram:
 
@@ -37,22 +49,40 @@ class Telegram:
             apihelper.proxy = {proxy.proto: proxy.url}
         self.response_tg = None
         self.response_tg_json = None
+
+        self.db = SessionLocal()
         self.__send_messages()
+
 
     def get_cache(self, chat_name: str = None, chat_id: str = None):
         read_cache = None
         try:
-            if not os.path.exists(config_cache_file):
-                raise IOError(ENOENT, 'No such file or directory', config_cache_file)
+            read_cache = self.db.query(models.chat.Chat).all()
         except Exception as err:
-            self.logger.error("Exception occurred: {}".format(err), exc_info=config_exc_info)
-            open(config_cache_file, 'a').close()
-            self.logger.info("Cache file created in {}".format(config_cache_file))
-        else:
-            read_cache = open(config_cache_file, 'r').read()
+            raise err
+        finally:
+            self.db.close()
 
-        if read_cache:
-            cache = json.loads(read_cache)
+        # bot_list = []
+        # for bot in bots:
+        #     proxy_dict = {}
+        #     bot_dict = {column.name: getattr(bot, column.name) for column in bot.__table__.columns}
+        #     if bot_dict['proxy_id']:
+        #         proxy_dict = {column.name: getattr(bot.proxy, column.name) for column in bot.proxy.__table__.columns}
+        #     bot_dict['proxy'] = proxy_dict
+        #     bot_list.append(bot_dict)
+        # try:
+        #     if not os.path.exists(config_cache_file):
+        #         raise IOError(ENOENT, 'No such file or directory', config_cache_file)
+        # except Exception as err:
+        #     self.logger.error("Exception occurred: {}".format(err), exc_info=config_exc_info)
+        #     open(config_cache_file, 'a').close()
+        #     self.logger.info("Cache file created in {}".format(config_cache_file))
+        # else:
+        #     read_cache = open(config_cache_file, 'r').read()
+
+        if len(read_cache) > 0:
+            cache = {{column.name: getattr(chat, column.name) for column in chat.__table__.columns} for chat in read_cache}
 
             if chat_name:
                 for name, value in cache.items():
