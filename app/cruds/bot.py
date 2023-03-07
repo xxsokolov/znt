@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+########################
+#    Sokolov Dmitry    #
+# xx.sokolov@gmail.com #
+#  https://t.me/ZbxNTg #
+########################
+# https://github.com/xxsokolov/znt
 from sqlalchemy.orm import Session
 
 from app import schemas, models, models

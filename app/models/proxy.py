@@ -1,4 +1,11 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Enum, DateTime
+# -*- coding: utf-8 -*-
+########################
+#    Sokolov Dmitry    #
+# xx.sokolov@gmail.com #
+#  https://t.me/ZbxNTg #
+########################
+# https://github.com/xxsokolov/znt
+from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
 from app.databases.database import Base
 

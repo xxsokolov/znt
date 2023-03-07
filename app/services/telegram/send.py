@@ -1,17 +1,20 @@
+# -*- coding: utf-8 -*-
+########################
+#    Sokolov Dmitry    #
+# xx.sokolov@gmail.com #
+#  https://t.me/ZbxNTg #
+########################
+# https://github.com/xxsokolov/znt
 import traceback
-import types
-from typing import Optional, NoReturn
 
-from app import schemas
-from . import ZabbixReq
-from . import ZNT
-from . import Telegram
+from .classes.integration import ZabbixReq
+from .classes.handlers import ZNT
+from .classes.telegram import Telegram
 
-from . import ReadParam
-from . import Log
-from config import *
+from .classes.parameters import ReadParam
+from .classes.logger import Log
+from app.services.telegram.config import *
 
-from app.cruds.bot import get_bots
 logger = Log(True).log
 
 

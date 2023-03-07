@@ -1,4 +1,10 @@
-from typing import Optional
+# -*- coding: utf-8 -*-
+########################
+#    Sokolov Dmitry    #
+# xx.sokolov@gmail.com #
+#  https://t.me/ZbxNTg #
+########################
+# https://github.com/xxsokolov/znt
 from pydantic import BaseModel, Field
 
 

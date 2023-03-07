@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+########################
+#    Sokolov Dmitry    #
+# xx.sokolov@gmail.com #
+#  https://t.me/ZbxNTg #
+########################
+# https://github.com/xxsokolov/znt
 from sqlalchemy import create_engine, MetaData, text
 from sqlalchemy.schema import CreateSchema
 from sqlalchemy.ext.declarative import declarative_base
@@ -18,7 +25,8 @@ url_object = URL.create(
 db_schema = os.environ.get("ZNT_DB_SCHEMA")
 meta = MetaData(schema=db_schema)
 debug_mode = bool(True if os.environ.get("DEBUG") == 'True' else False)
-engine = create_engine(url_object, echo=debug_mode, connect_args={"application_name": "ZNT"})
+engine = create_engine(url_object, echo=debug_mode, connect_args={"application_name": "ZNT"},
+                       pool_size=10, max_overflow=2, pool_recycle=300, pool_pre_ping=True, pool_use_lifo=True)
 
 inspector = inspect(engine)
 all_schemas = inspector.get_schema_names()

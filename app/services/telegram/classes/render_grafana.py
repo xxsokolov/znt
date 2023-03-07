@@ -5,6 +5,7 @@
 #  https://t.me/ZbxNTg #
 ########################
 # https://github.com/xxsokolov/znt
+import os
 import time
 from typing import Union
 
@@ -12,7 +13,7 @@ from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
-from classes.integration import Grafana
+from app.services.telegram.classes.integration import Grafana
 
 
 class RenderingPNG:
@@ -39,7 +40,9 @@ class RenderingPNG:
             --disable-translate'''
             for x in opt.split():
                 options.add_argument(x)
-            driver = webdriver.Remote("http://znt_firefox:4444/wd/hub", DesiredCapabilities.FIREFOX)
+            driver = webdriver.Remote("http://{host}:{port}/wd/hub".format(host=os.environ.get("SELENIUM_BIND_ADDRESS"),
+                                                                           port=os.environ.get("SELENIUM_BIND_PORTS")),
+                                      DesiredCapabilities.FIREFOX)
             driver.get("{proto}://{host}:{port}/login".format(proto=self.proto,
                                                               host=self.host,
                                                               port=self.port))

@@ -2,7 +2,7 @@ venv
 .idea
 .run
 .env
-config.py
+app/services/telegram/config.py
 *.yaml
 *.log
 *.cache

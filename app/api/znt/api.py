@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+########################
+#    Sokolov Dmitry    #
+# xx.sokolov@gmail.com #
+#  https://t.me/ZbxNTg #
+########################
+# https://github.com/xxsokolov/znt
 from fastapi import APIRouter
 from app.api.znt.endpoints.bot import bot_router
 from app.api.znt.endpoints.proxy import proxy_router

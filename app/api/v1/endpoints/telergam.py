@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+########################
+#    Sokolov Dmitry    #
+# xx.sokolov@gmail.com #
+#  https://t.me/ZbxNTg #
+########################
+# https://github.com/xxsokolov/znt
 import traceback
 
 from fastapi import Depends, HTTPException, APIRouter, status
@@ -7,7 +14,7 @@ from sqlalchemy.orm import Session
 from app import schemas, models
 
 from app.databases.database import SessionLocal
-from app.services.telegram import send_message
+from app.services.telegram.send import send_message
 
 
 telegram_router = APIRouter()
@@ -24,7 +31,7 @@ def get_db():
 
 @telegram_router.post("/telegram/sendMessage", status_code=status.HTTP_202_ACCEPTED,
                       response_model=schemas.telegram.Message, summary="Отправить сообщение в Telegram")
-async def telegram_send_message(schema: schemas.telegram.Message, db: Session = Depends(get_db)):
+def telegram_send_message(schema: schemas.telegram.Message, db: Session = Depends(get_db)):
     msg = schema.dict()
     bots = db.query(models.bot.Bot).outerjoin(models.proxy.Proxy, models.bot.Bot.proxy_id == models.proxy.Proxy.id).all()
     bot_list = []

@@ -14,8 +14,8 @@ import io
 import types
 
 from PIL import Image, ImageDraw, ImageFont
-import classes.render_grafana as grafana
-from config import *
+from .render_grafana import RenderingPNG
+from app.services.telegram.config import *
 
 
 class FailSafeDict(dict):
@@ -136,7 +136,7 @@ class ZNT:
             if settings_dash:
                 # Добавляем рендер дашборда Графаны
                 uid = str(settings_dash.split('=')[1])
-                png = grafana.RenderingPNG(uid=uid, logger=self.logger).get_screenshot()
+                png = RenderingPNG(uid=uid, logger=self.logger).get_screenshot()
                 if png:
                     self.chart_png.append(png)
             # Добавляем графики на основании itemid из экшена

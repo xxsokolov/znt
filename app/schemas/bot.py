@@ -1,7 +1,11 @@
-from typing import Union, Optional, List
+# -*- coding: utf-8 -*-
+########################
+#    Sokolov Dmitry    #
+# xx.sokolov@gmail.com #
+#  https://t.me/ZbxNTg #
+########################
+# https://github.com/xxsokolov/znt
 from fastapi import Query
-
-from pydantic import BaseModel, Field
 from enum import Enum
 from app.schemas.proxy import *
 
@@ -30,8 +34,3 @@ class FullBot(BaseBot):
 
     class Config:
         orm_mode = True
-
-
-
-
-

@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+########################
+#    Sokolov Dmitry    #
+# xx.sokolov@gmail.com #
+#  https://t.me/ZbxNTg #
+########################
+# https://github.com/xxsokolov/znt
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Enum, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
