@@ -10,13 +10,10 @@ from pydantic import BaseModel
 
 class BaseChat(BaseModel):
     name: str
-    chat_id_prev: str
-    description: str
+    chat_id: int
+    chat_id_prev: int = None
+    description: str = None
     type: str
-
-
-class AddChat(BaseChat):
-    chat_id: str = None
 
 
 class FullChat(BaseChat):

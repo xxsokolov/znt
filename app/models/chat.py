@@ -7,7 +7,6 @@
 # https://github.com/xxsokolov/znt
 from sqlalchemy import Column, Integer, String, DateTime, Numeric
 from sqlalchemy.sql import func
-
 from app.databases.database import Base
 
 

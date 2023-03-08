@@ -6,9 +6,7 @@
 ########################
 # https://github.com/xxsokolov/znt
 from sqlalchemy.orm import Session
-
-from app import schemas, models
-# from app.models import proxy
+from app import models
 
 
 def get_proxy(db: Session):

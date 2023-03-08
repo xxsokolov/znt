@@ -7,7 +7,6 @@
 # https://github.com/xxsokolov/znt
 from fastapi import Depends, HTTPException, APIRouter
 from sqlalchemy.orm import Session
-
 from app import schemas, models, cruds
 from app.databases.database import SessionLocal, engine
 
@@ -24,7 +23,7 @@ def get_db():
         db.close()
 
 
-# @chat_router.get("/chat/", response_model=list[schemas.chat.FullChat], summary="Показать все чаты")
+@chat_router.get("/chat/", response_model=list[schemas.chat.FullChat], summary="Показать все чаты")
 def read_chat(db: Session = Depends(get_db)):
     chat = cruds.chat.get_chat(db)
     if len(chat) == 0:

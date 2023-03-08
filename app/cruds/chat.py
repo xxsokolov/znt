@@ -6,7 +6,6 @@
 ########################
 # https://github.com/xxsokolov/znt
 from sqlalchemy.orm import Session
-
 from app import models
 
 
