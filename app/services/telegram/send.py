@@ -20,7 +20,7 @@ logger = Log(True).log
 
 def send_message(bot_config, send_config):
     try:
-        bot_config = ReadParam(logger=logger, json=bot_config).read_api_mode()
+        # bot_config = ReadParam(logger=logger, json=bot_config).read_api_mode()
         send_config = ReadParam(logger=logger, json=send_config).read_api_mode()
         # bot_config = ReadParam(logger=logger, path=r'/app/.bots.yaml').read_bots_yaml()
         zabbix_req = ZabbixReq(logger=logger, url=zabbix_api_url, login=zabbix_api_login, password=zabbix_api_pass,

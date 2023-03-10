@@ -23,7 +23,8 @@ from fastapi import FastAPI
 debug_mode = bool(True if os.environ.get("DEBUG") == 'True' else False)
 
 api = FastAPI(
-    title='FastAPI: znt', version='2.0', debug=debug_mode
+    title='FastAPI: znt', version='2.0', openapi_url='/api/openapi.jsons', docs_url='/api/docs', redoc_url='/api/redocs',
+    debug=debug_mode
 )
 api.include_router(api_v1_router, prefix='/api/latest')
 api.include_router(api_v1_router, prefix='/api/v1')

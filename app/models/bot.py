@@ -18,8 +18,8 @@ class Bot(Base):
     __tablename__ = "bot"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, index=True, nullable=False)
-    type = Column(String, Enum(schemas.bot.TypeBot, name="type_bot_enum", create_type=False), index=True, nullable=False)
+    name = Column(String, index=True, nullable=False)
+    group = Column(String, default=None, index=True)
     token = Column(String, index=True, nullable=False)
     description = Column(String, default=None, index=True)
     priority = Column(Integer, default=0, index=True, nullable=False)

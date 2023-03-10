@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 class Message(BaseModel):
     chat_id: str = Field(default=None, description="Укажите @username или Chat Name")
     bot: str = Field(default='default', description="Укажите @username или Chat Name")
+    bot_group: str = Field(default='default', description="Укажите @username или Chat Name")
     title: str = Field(
         default='Zabbix server - Zabbix server: More than 100 items having missing data for more than 10 minutes',
         description="Укажите @username или Chat Name")
@@ -26,7 +27,7 @@ class Message(BaseModel):
     hostid: str = Field(default='10084', description="The description of the item")
     triggerid: str = Field(default='13486', description="The description of the item")
     triggerurl: str = Field(default='Zabbix server', description="The description of the item")
-    eventtags: str = Field(default='target:zabbix, ZNTMentions:@xxsokolov', description="The description of the item")
+    eventtags: str = Field(default='', description="target:zabbix, ZNTMentions:@xxsokolov, ZNTMentions:@xxsokolov, znts:dash=YGLp1d14k, znts:bot=@username")
     eventid: str = Field(default='55', description="The description of the item")
     actionid: str = Field(default='7', description="The description of the item")
     graphs: bool = Field(default=True, description="The description of the item")

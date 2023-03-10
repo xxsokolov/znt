@@ -42,7 +42,7 @@ class ZNT:
         self.mentions: list = []
         self.chart_png: list = []
         self.message: str
-        self.bot_list: types.SimpleNamespace = bots
+        self.bot_list: list = bots
         self.bot_name: str
         self.bot_token: str
         self.bot_proxy_use: bool
@@ -384,59 +384,100 @@ class ZNT:
             self.chart_period = zabbix_graph_period_default
 
     def __init_bot(self):
-        _default = 'production'
+        # _default = 'production'
         settings_raw = None
         settings_bot = next((x for x in self.zntsettings[trigger_settings_tag] if trigger_settings_tag_bot in x), None)
+        settings_bot_group = next((x for x in self.zntsettings[trigger_settings_tag] if trigger_settings_tag_bot_group in x), None)
+        # Проверяем настройки выбора бота в тэгах
         if settings_bot:
             try:
-                #settings_raw = [i if i.find(trigger_settings_tag_bot) == 0 else False for i in self.zntsettings[trigger_settings_tag]][0]
-                settings = str(settings_bot.split('=')[1])
+                znts_bot = str(settings_bot.split('=')[1])
             except Exception as err:
                 self.logger.error("Exception occurred: {}:{}, {}".format(
                     trigger_settings_tag, settings_raw, err), exc_info=config_exc_info), exit(1)
             else:
-                group, sep, username = settings.rpartition('@')
-                username = sep + username
                 # Ищем имя бота отвечающего требованиям Telegram
-                if re.search("^(?=.{5,35}$)@[a-zA-Z0-9_]+(?:bot|Bot)", username):
-                    self.logger.info("Отправка сообщения через бота: {}: {}'".format(trigger_settings_tag, settings))
-                    list_priority = []
-                    for bot in self.bots[_default]:
-                        if bot['bot'] == username:
-                            self.bot = bot['token']
-                            self.proxy = bot['proxy']
-                            self.logger.info("Бот {} найден в ботс-файле".format(bot['bot']))
+                if re.search("^(?=.{5,35}$)@[a-zA-Z0-9_]+(?:bot|Bot)", znts_bot):
+                    self.logger.info("Отправка сообщения через бота: {}: {}'".format(trigger_settings_tag, znts_bot))
+                    for bot in self.bot_list:
+                        if bot['name'] == znts_bot:
+                            self.bot_name = bot['name']
+                            self.bot_token = bot['token']
+                            self.bot_proxy_use = bot['proxy_use']
+                            self.bot_proxy = bot['proxy']
+                            self.logger.info("Бот {} найден в БД.".format(self.send.bot))
                             return
-                    self.bot = False
-                    self.logger.info("Бот {}: {} не найден в ботс-файле.".format(group, username))
-                    #return
-
-        if self.send.bot and not self.send.bot == 'default':
-            group, sep, username = self.send.bot.rpartition('@')
-            username = sep+username
-            if re.search("^(?=.{5,35}$)@[a-zA-Z0-9_]+(?:bot|Bot)", username):
-                self.logger.info("Отправка сообщения через бота из action: {}'".format(self.send.bot))
+                    raise Exception("Бот {} не найден в БД.".format(self.send.bot))
+        elif settings_bot_group:
+            try:
+                znts_bot_group = str(settings_bot_group.split('=')[1])
+            except Exception as err:
+                self.logger.error("Exception occurred: {}:{}, {}".format(
+                    trigger_settings_tag, settings_raw, err), exc_info=config_exc_info), exit(1)
+            else:
+                self.logger.info("Отправка сообщения через бота в группе: {}: {}'".format(trigger_settings_tag, znts_bot_group))
                 list_priority = []
-                for bot in self.bots[group]:
-                    if bot['bot'] == username:
-                        self.bot = bot['token']
-                        self.proxy = bot['proxy']
-                        self.logger.info("Бот {} найден в ботс-файле.".format(username))
+                for znts_bot in self.bot_list:
+                    if znts_bot['group'] == self.send.bot_group:
+                        list_priority.append(znts_bot['priority'])
+                for znts_bot in self.bot_list:
+                    if znts_bot['group'] == self.send.bot_group and znts_bot['priority'] == min(list_priority):
+                        self.bot_name = znts_bot['name']
+                        self.bot_token = znts_bot['token']
+                        self.bot_proxy_use = znts_bot['proxy_use']
+                        self.bot_proxy = znts_bot['proxy']
+                        self.logger.info("Бот {} найден в БД.".format(self.send.bot))
                         return
-                self.bot = False
-                self.logger.info("Бот {}: {} не найден в ботс-файле.".format(group, username))
-                #return
+                raise Exception("Бот {} - не найден в БД.".format(self.send.bot))
 
-        if self.send.bot and self.send.bot == 'default':
+
+
+        if len(self.send.bot) > 0 and len(self.send.bot_group) == 0:  # Указан только бот
+            if re.search("^(?=.{5,35}$)@[a-zA-Z0-9_]+(?:bot|Bot)", self.send.bot):
+                self.logger.info("Отправка сообщения через бота из action: {}'".format(self.send.bot))
+                for znts_bot in self.bot_list:
+                    if znts_bot['name'] == self.send.bot:
+                        self.bot_name = znts_bot['name']
+                        self.bot_token = znts_bot['token']
+                        self.bot_proxy_use = znts_bot['proxy_use']
+                        self.bot_proxy = znts_bot['proxy']
+                        self.logger.info("Бот {} найден в БД.".format(self.send.bot))
+                        return
+                raise Exception("Бот {} не найден в БД.".format(self.send.bot))
+        elif len(self.send.bot) > 0 and len(self.send.bot_group) > 0:  # Указан бот и группа
+            for znts_bot in self.bot_list:
+                if znts_bot['name'] == self.send.bot and znts_bot['group'] == self.send.bot_group:
+                    self.bot_name = znts_bot['name']
+                    self.bot_token = znts_bot['token']
+                    self.bot_proxy_use = znts_bot['proxy_use']
+                    self.bot_proxy = znts_bot['proxy']
+                    self.logger.info("Бот {} найден в БД.".format(self.send.bot))
+                    return
+            raise Exception("Бот {} в группе {} - не найден в БД.".format(self.send.bot, self.send.bot_group))
+        elif len(self.send.bot) == 0 and len(self.send.bot_group) > 0:  # Указана только группа
             list_priority = []
-            for bot in self.bot_list:
-                if bot.type == _default:
-                    list_priority.append(bot.priority)
+            for znts_bot in self.bot_list:
+                if znts_bot['group'] == self.send.bot_group:
+                    list_priority.append(znts_bot['priority'])
+            for znts_bot in self.bot_list:
+                if znts_bot['group'] == self.send.bot_group and znts_bot['priority'] == min(list_priority):
+                    self.bot_name = znts_bot['name']
+                    self.bot_token = znts_bot['token']
+                    self.bot_proxy_use = znts_bot['proxy_use']
+                    self.bot_proxy = znts_bot['proxy']
+                    self.logger.info("Бот {} найден в БД.".format(self.send.bot))
+                    return
+            raise Exception("Бот {} - не найден в БД.".format(self.send.bot))
+        else:
+            list_priority = []
+            for znts_bot in self.bot_list:
+                list_priority.append(znts_bot['priority'])
 
-            for bot in self.bot_list:
-                if bot.priority == min(list_priority):
-                    self.bot_name = bot.name
-                    self.bot_token = bot.token
-                    self.bot_proxy_use = bot.proxy_use
-                    self.bot_proxy = bot.proxy
-                    self.logger.info("Отправка сообщения через приоритетного бота в ботс-файле: {}'".format(bot.name))
+            for znts_bot in self.bot_list:
+                if znts_bot['priority'] == min(list_priority):
+                    self.bot_name = znts_bot['name']
+                    self.bot_token = znts_bot['token']
+                    self.bot_proxy_use = znts_bot['proxy_use']
+                    self.bot_proxy = znts_bot['proxy']
+                    self.logger.info("Отправка сообщения через приоритетного бота из БД: {}'".format(znts_bot['name']))
+                    break

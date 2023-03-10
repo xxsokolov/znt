@@ -47,6 +47,7 @@ def telegram_send_message(schema: schemas.telegram.Message, db: Session = Depend
         "telegram":
             {"send":
                  {"bot": msg['bot'],
+                  "bot_group": msg['bot_group'],
                   "chat_id": msg['chat_id'],
                   "charts": {
                       "title": msg['title'],
