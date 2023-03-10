@@ -6,12 +6,10 @@
 ########################
 # https://github.com/xxsokolov/znt
 from sqlalchemy import create_engine, MetaData, text
-from sqlalchemy.schema import CreateSchema
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.engine import URL
 from sqlalchemy import inspect
-from app import models
 import os
 
 url_object = URL.create(
@@ -26,7 +24,7 @@ db_schema = os.environ.get("ZNT_DB_SCHEMA")
 meta = MetaData(schema=db_schema)
 debug_mode = bool(True if os.environ.get("DEBUG") == 'True' else False)
 engine = create_engine(url_object, echo=debug_mode, connect_args={"application_name": "ZNT"},
-                       pool_size=10, max_overflow=2, pool_recycle=300, pool_pre_ping=True, pool_use_lifo=True)
+                       pool_size=2, max_overflow=8, pool_recycle=300, pool_pre_ping=True, pool_use_lifo=True)
 
 inspector = inspect(engine)
 all_schemas = inspector.get_schema_names()
@@ -36,7 +34,7 @@ for schema in [meta.schema]:
             result = connection.execute(text("CREATE SCHEMA {}".format(schema)))
 
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, expire_on_commit=False)
 
 Base = declarative_base(metadata=meta)
 

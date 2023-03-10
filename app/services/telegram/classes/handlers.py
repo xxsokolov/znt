@@ -388,8 +388,8 @@ class ZNT:
         settings_raw = None
         settings_bot = next((x for x in self.zntsettings[trigger_settings_tag] if trigger_settings_tag_bot in x), None)
         settings_bot_group = next((x for x in self.zntsettings[trigger_settings_tag] if trigger_settings_tag_bot_group in x), None)
-        # Проверяем настройки выбора бота в тэгах
-        if settings_bot:
+
+        if settings_bot:  # Если указано имя бота в тэге znts:bot=@username
             try:
                 znts_bot = str(settings_bot.split('=')[1])
             except Exception as err:
@@ -408,7 +408,7 @@ class ZNT:
                             self.logger.info("Бот {} найден в БД.".format(self.send.bot))
                             return
                     raise Exception("Бот {} не найден в БД.".format(self.send.bot))
-        elif settings_bot_group:
+        elif settings_bot_group:  # Если указана группа в тэге znts:bot_group=dba
             try:
                 znts_bot_group = str(settings_bot_group.split('=')[1])
             except Exception as err:
