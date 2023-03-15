@@ -23,7 +23,7 @@ def send_message(bot_config, send_config):
         # bot_config = ReadParam(logger=logger, json=bot_config).read_api_mode()
         send_config = ReadParam(logger=logger, json=send_config).read_api_mode()
         # bot_config = ReadParam(logger=logger, path=r'/app/.bots.yaml').read_bots_yaml()
-        zabbix_req = ZabbixReq(logger=logger, url=zabbix_api_url, login=zabbix_api_login, password=zabbix_api_pass,
+        zabbix_req = ZabbixReq(logger=logger, url=zabbix_web_url, login=zabbix_web_login, password=zabbix_web_pass,
                                chart=zabbix_graph_chart)
         # logger.info("Send to '{}' action: '{}'".format(send_config.preferences.telegram.send.chat_id, send_config.preferences.telegram.send.message.header))
 

@@ -16,8 +16,8 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMedia
 from telebot import apihelper
 
 from app.databases.database import SessionLocal
-from app import models
 from app.services.telegram.config import *
+from app.api import models
 
 
 class Telegram:
@@ -32,6 +32,7 @@ class Telegram:
         self.message = message
         self.disable_notification = disable_notification
         self.bot = TeleBot(token)
+        # apihelper.API_URL = "http://localhost:8081/bot{0}/{1}"
         if proxy_use:
             apihelper.proxy = {proxy.proto: proxy.url}
         self.response_tg = None
@@ -42,7 +43,8 @@ class Telegram:
 
     def get_chat_db(self, chat_name: str = None, chat_id: str = None):
         try:
-            chat_list_db = [{column.name: getattr(chat, column.name) for column in chat.__table__.columns} for chat in self.db.query(models.chat.Chat).all()]
+            chat_list_db = [{column.name: getattr(chat, column.name) for column in chat.__table__.columns} for chat in self.db.query(
+                models.chat.Chat).all()]
         except Exception as err:
             raise err
         finally:
@@ -75,15 +77,15 @@ class Telegram:
         try:
             if not update:
                 chat_data = dict(name=chat_name, chat_id=chat_id, chat_id_prev=None, type=chat_type)
-                db_chat = models.chat.Chat(**chat_data)
+                db_chat = app.api.models.chat.Chat(**chat_data)
                 self.db.add(db_chat)
                 self.db.commit()
                 self.db.refresh(db_chat)
             else:
                 chat_data = dict(name=chat_name, chat_id=chat_id, chat_id_prev=None, type=chat_type)
                 # db_chat = models.chat.Chat(**chat_data)
-                update_chat = self.db.query(models.chat.Chat)\
-                    .filter(models.chat.Chat.name == chat_name and models.chat.Chat.chat_id == chat_id)\
+                update_chat = self.db.query(app.api.models.chat.Chat)\
+                    .filter(app.api.models.chat.Chat.name == chat_name and app.api.models.chat.Chat.chat_id == chat_id)\
                     .update(dict(chat_id=update['update_value'], type=chat_type, chat_id_prev=chat_id))
                 self.db.commit()
                 # self.db.refresh(db_chat)

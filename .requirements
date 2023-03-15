@@ -11,3 +11,4 @@ urllib3
 psycopg2
 grafana_client
 pyTelegramBotAPI
+flask-admin

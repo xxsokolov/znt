@@ -72,7 +72,7 @@ class ZNT:
         body = '{} <a href="{}">...</a>'.format(
             html.escape(self.send.message.body)[:body_messages_max_symbol],
             zabbix_event_link.format(
-                zabbix_server=zabbix_api_url, eventid=self.macros.eventid,
+                zabbix_server=zabbix_web_url, eventid=self.macros.eventid,
                 triggerid=self.macros.triggerid)) if truncated else html.escape(self.send.message.body)
 
         links = body_messages_url_delimiter.join(self.links) if body_messages_url and len(self.links) != 0 else ''
@@ -156,7 +156,7 @@ class ZNT:
             if re.findall(r"\d+", item_id):
                 items_link = self.__create_links_list(
                     _bool=True if self.options.graphlinks and body_messages_url_graphs else False,
-                    url=zabbix_graph_link.format(zabbix_server=zabbix_api_url, itemid=item_id,
+                    url=zabbix_graph_link.format(zabbix_server=zabbix_web_url, itemid=item_id,
                                                  range_time=self.options.graphs_period),
                     _type=body_messages_url_emoji_graphs
                 )
@@ -164,19 +164,19 @@ class ZNT:
         # host url
         self.links.append(self.__create_links_list(
             _bool=True if self.options.hostlinks and body_messages_url_host else False,
-            url=zabbix_host_link.format(zabbix_server=zabbix_api_url,
+            url=zabbix_host_link.format(zabbix_server=zabbix_web_url,
                                         host=self.macros.hostname),
             _type=body_messages_url_emoji_host))
         # ack url
         self.links.append(self.__create_links_list(
             _bool=True if self.options.acklinks and body_messages_url_ack else False,
-            url=zabbix_ack_link.format(zabbix_server=zabbix_api_url,
+            url=zabbix_ack_link.format(zabbix_server=zabbix_web_url,
                                        eventid=self.macros.eventid),
             _type=body_messages_url_emoji_ack))
         # event url
         self.links.append(self.__create_links_list(
             _bool=True if self.options.eventlinks and body_messages_url_event else False,
-            url=zabbix_event_link.format(zabbix_server=zabbix_api_url,
+            url=zabbix_event_link.format(zabbix_server=zabbix_web_url,
                                          eventid=self.macros.eventid,
                                          triggerid=self.macros.triggerid),
             _type=body_messages_url_emoji_event))

@@ -35,9 +35,10 @@ services:
       - external_net
 
   selenium:
-    container_name: znt_firefox
-    hostname: znt_firefox
-    image: selenium/standalone-firefox
+    container_name: znt_chrome
+    hostname: znt_chrome
+    image: selenium/standalone-chrome
+    #shm_size: 2gb
     ports:
       - "4444:4444"
     networks:

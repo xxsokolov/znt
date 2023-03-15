@@ -6,8 +6,9 @@
 ########################
 # https://github.com/xxsokolov/znt
 from sqlalchemy.orm import Session
-from app import models
+from app.api import models
 
 
-def get_chat(db: Session):
-    return db.query(models.chat.Chat).all()
+
+def get_proxy(db: Session):
+    return db.query(models.proxy.Proxy).all()

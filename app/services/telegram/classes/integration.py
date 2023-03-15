@@ -28,15 +28,19 @@ class ZabbixReq:
         self.cookie = None
 
     def __get_cookie(self):
-        data_api = {"name": self.login, "password": self.password, "enter": "Sign in"}
-        req_cookie = requests.post(self.url, data=data_api, verify=False)
-        self.cookie = req_cookie.cookies
-        req_cookie.close()
-        if not any(_ in self.cookie for _ in ['zbx_session', 'zbx_sessionid']):
-            self.logger.error(
-                'User authorization failed: {} ({})'.format('Login name or password is incorrect.', self.url))
-            return False
-        return self.cookie
+        try:
+            data_api = {"name": self.login, "password": self.password, "enter": "Sign in"}
+            req_cookie = requests.post(self.url, data=data_api, verify=False)
+            self.cookie = req_cookie.cookies
+            req_cookie.close()
+        except Exception as err:
+            raise Exception(err)
+        else:
+            if not any(_ in self.cookie for _ in ['zbx_session', 'zbx_sessionid']):
+                self.logger.error(
+                    'User authorization failed: {} ({})'.format('Login name or password is incorrect.', self.url))
+                return False
+            return self.cookie
 
     def get_chart_png(self, itemid, name, period=None):
         try:

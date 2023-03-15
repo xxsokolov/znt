@@ -6,9 +6,7 @@
 ########################
 # https://github.com/xxsokolov/znt
 from sqlalchemy.orm import Session
-
-from app import schemas, models, models
-
+from app.api import schemas, models
 
 def get_bots(db: Session, skip: int = 0, limit: int = 100):
     return db.query(models.bot.Bot).offset(skip).limit(limit).all()

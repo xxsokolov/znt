@@ -7,8 +7,8 @@
 # https://github.com/xxsokolov/znt
 from fastapi import Depends, HTTPException, APIRouter
 from sqlalchemy.orm import Session
-from app import schemas, models, cruds
 from app.databases.database import SessionLocal, engine
+from app.api import schemas, models, cruds
 
 models.proxy.Base.metadata.create_all(bind=engine)
 

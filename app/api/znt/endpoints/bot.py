@@ -8,8 +8,8 @@
 from fastapi import Depends, HTTPException, APIRouter, Path
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
-from app import schemas, models, cruds
 from app.databases.database import SessionLocal, engine
+from app.api import schemas, models, cruds
 
 models.bot.Base.metadata.create_all(bind=engine)
 
@@ -41,7 +41,7 @@ def add_bot(bot: schemas.bot.AddBot, db: Session = Depends(get_db)):
     return JSONResponse(content={"status": "Бот {name} добавлен".format(**bot.dict()), "detail": bot.dict()})
 
 
-@bot_router.get("/bot/{name}", response_model=schemas.bot.FullBot,  summary="Найти бота по имени")
+@bot_router.get("/bot/{name}", response_model=schemas.bot.FullBot, summary="Найти бота по имени")
 def get_bot_by_name(
         name: str = Path(..., example='@test_bot', description="Укажите имя бота.",
                          regex="^(?=.{5,35}$)@[a-zA-Z0-9_]+(?:bot|Bot)"),

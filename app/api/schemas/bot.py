@@ -6,9 +6,8 @@
 ########################
 # https://github.com/xxsokolov/znt
 from fastapi import Query
-from enum import Enum
-from app.schemas.proxy import *
-
+from pydantic import BaseModel
+from .proxy import FullProxy
 
 # class TypeBot(str, Enum):
 #     prod = "production"

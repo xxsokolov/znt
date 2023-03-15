@@ -42,7 +42,7 @@ class RenderingPNG:
                 options.add_argument(x)
             driver = webdriver.Remote("http://{host}:{port}/wd/hub".format(host=os.environ.get("SELENIUM_BIND_ADDRESS"),
                                                                            port=os.environ.get("SELENIUM_BIND_PORTS")),
-                                      DesiredCapabilities.FIREFOX)
+                                      DesiredCapabilities.CHROME)
             driver.get("{proto}://{host}:{port}/login".format(proto=self.proto,
                                                               host=self.host,
                                                               port=self.port))

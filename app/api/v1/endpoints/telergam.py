@@ -11,11 +11,9 @@ from fastapi import Depends, HTTPException, APIRouter, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from app import schemas, models
-
 from app.databases.database import SessionLocal
 from app.services.telegram.send import send_message
-
+from app.api import schemas, models
 
 telegram_router = APIRouter()
 
