@@ -32,11 +32,11 @@ api_app = FastAPI(
     debug=debug_mode
 )
 
-api_app.mount("/", WSGIMiddleware(create_app()))
 api_app.include_router(api_v1_router, prefix='/api/latest')
 api_app.include_router(api_v1_router, prefix='/api/v1')
 api_app.include_router(znt_router, prefix='/api/znt')
 # app.include_router(api_v2_router, prefix='/api/v2')
+api_app.mount("/", WSGIMiddleware(create_app()))
 
 
 if __name__ == "__main__":
