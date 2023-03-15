@@ -18,8 +18,8 @@ sys.path.append(parent)
 from app.api.v1.api import api_v1_router
 # from app.api.v2.api import api_v2_router
 from app.api.znt.api import znt_router
-from app.admin.admin import flask_admin_app
-
+# from app.admin.main import flask_app
+from app.admin.app import create_app
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.wsgi import WSGIMiddleware
@@ -32,7 +32,7 @@ api_app = FastAPI(
     debug=debug_mode
 )
 
-api_app.mount("/admin", WSGIMiddleware(flask_admin_app))
+api_app.mount("/", WSGIMiddleware(create_app()))
 api_app.include_router(api_v1_router, prefix='/api/latest')
 api_app.include_router(api_v1_router, prefix='/api/v1')
 api_app.include_router(znt_router, prefix='/api/znt')

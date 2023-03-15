@@ -26,12 +26,12 @@ debug_mode = bool(True if os.environ.get("DEBUG") == 'True' else False)
 engine = create_engine(url_object, echo=debug_mode, connect_args={"application_name": "ZNT"},
                        pool_size=2, max_overflow=8, pool_recycle=300, pool_pre_ping=True, pool_use_lifo=True)
 
-inspector = inspect(engine)
-all_schemas = inspector.get_schema_names()
-for schema in [meta.schema]:
-    if schema not in all_schemas:
-        with engine.connect() as connection:
-            result = connection.execute(text("CREATE SCHEMA {}".format(schema)))
+# inspector = inspect(engine)
+# all_schemas = inspector.get_schema_names()
+# for schema in [meta.schema]:
+#     if schema not in all_schemas:
+#         with engine.connect() as connection:
+#             result = connection.execute(text("CREATE SCHEMA {}".format(schema)))
 
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, expire_on_commit=False)

@@ -12,3 +12,4 @@ psycopg2
 grafana_client
 pyTelegramBotAPI
 flask-admin
+flask-login

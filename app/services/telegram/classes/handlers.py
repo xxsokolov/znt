@@ -348,7 +348,6 @@ class ZNT:
         #                                                                          trigger_settings_tag_not_notify))
         #     self.settings_not_notify = True
 
-
     def __settings_chart_period(self):
         if isinstance(self.zntsettings, dict) and not all(
                 settings.find(trigger_settings_tag_graph_period) and len(settings) > 0 for settings in
