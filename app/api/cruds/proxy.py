@@ -9,6 +9,5 @@ from sqlalchemy.orm import Session
 from app.api import models
 
 
-
 def get_proxy(db: Session):
     return db.query(models.proxy.Proxy).all()

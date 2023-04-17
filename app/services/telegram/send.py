@@ -15,7 +15,7 @@ from .classes.parameters import ReadParam
 from .classes.logger import Log
 from app.services.telegram.config import *
 
-logger = Log(True).log
+logger = Log(bool(True if os.environ.get("DEBUG") == 'True' else False)).log
 
 
 def send_message(bot_config, send_config):
@@ -30,7 +30,8 @@ def send_message(bot_config, send_config):
         znt = ZNT(logger=logger, bots=bot_config, zabbix_req=zabbix_req,  preferences=send_config.preferences)
 
         xx = Telegram(token=znt.bot_token,
-                       send_to=send_config.preferences.telegram.send.chat_id,
+                       send_to=send_config.preferences.telegram.send.send_to,
+                       topic=send_config.preferences.telegram.send.topic,
                        message=znt.message,
                        keyboard=send_config.preferences.znt.options.keyboard,
                        chart_png=znt.chart_png,

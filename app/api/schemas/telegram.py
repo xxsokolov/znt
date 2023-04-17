@@ -9,7 +9,8 @@ from pydantic import BaseModel, Field
 
 
 class Message(BaseModel):
-    chat_id: str = Field(default=None, description="Укажите @username или Chat Name")
+    send_to: str = Field(default=None, description="Укажите @username или Chat Name")
+    topic: str = Field(default=None, description="Укажите имя топика в суппер группе")
     bot: str = Field(default='default', description="Укажите @username или Chat Name")
     bot_group: str = Field(default='default', description="Укажите @username или Chat Name")
     title: str = Field(

@@ -5,22 +5,18 @@
 #  https://t.me/ZbxNTg #
 ########################
 # https://github.com/xxsokolov/znt
-from typing import List
 from pydantic import BaseModel
-from .topic import FullTopic
 
 
-class BaseChat(BaseModel):
+class BaseTopic(BaseModel):
     name: str
-    chat_id: int
-    chat_id_prev: int = None
-    description: str = None
-    type: str
+    topic_id: int
+    chat_id: str
 
 
-class FullChat(BaseChat):
+class FullTopic(BaseTopic):
     id: int
-    topic: List[FullTopic] = []
+    # chat: FullChat = None
 
     class Config:
         orm_mode = True

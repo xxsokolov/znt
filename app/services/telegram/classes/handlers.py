@@ -414,7 +414,7 @@ class ZNT:
                 self.logger.error("Exception occurred: {}:{}, {}".format(
                     trigger_settings_tag, settings_raw, err), exc_info=config_exc_info), exit(1)
             else:
-                self.logger.info("Отправка сообщения через бота в группе: {}: {}'".format(trigger_settings_tag, znts_bot_group))
+                self.logger.info("Отправка сообщения через бота в группе: {}: {}".format(trigger_settings_tag, znts_bot_group))
                 list_priority = []
                 for znts_bot in self.bot_list:
                     if znts_bot['group'] == self.send.bot_group:
