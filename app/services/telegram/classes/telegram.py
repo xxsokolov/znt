@@ -11,6 +11,7 @@ __license__ = "MIT"
 import re
 import json
 
+from sqlalchemy.orm import joinedload
 from telebot import TeleBot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
 from telebot import apihelper
@@ -56,14 +57,14 @@ class Telegram:
             if chat_name:
                 for chat_db in chat_list_db:
                     if chat_name == chat_db.get("name"):
-                        return chat_db["chat_id"]
-                self.logger.warning('Имя чата "{chat_name}" не найдено в кеш-файле.'.format(chat_name=chat_name))
+                        return chat_db
+                self.logger.warning('Имя чата "{chat_name}" не найдено в таблице chat.'.format(chat_name=chat_name))
                 return False
             elif chat_id:
                 for chat_db in chat_list_db:
                     if chat_id == chat_db.get("chat_id"):
                         return chat_db
-                self.logger.info('Имя чата "{chat_id}" не соответствует имени в кеш-файле.'.format(
+                self.logger.info('Имя чата "{chat_id}" не соответствует имени в таблице chat.'.format(
                     chat_id=chat_id
                 ))
                 return False
@@ -73,23 +74,42 @@ class Telegram:
             self.logger.warning("Чат '{chat_name}' не найден в кэш-файле.".format(chat_name=chat_name))
             return False
 
-    def get_topic_db(self, topic_id: str = None, topic_name: str = None):
+    def get_topic_db(self, chat_id: str = None, topic_id: str = None, topic_name: str = None):
         try:
-            topic_list_db = [{column.name: getattr(topic, column.name) for column in topic.__table__.columns} for topic in self.db.query(models.topic.Topic).all()]
+            join_chat_topic = []
+            for chat in self.db.query(models.chat.Chat).join(models.topic.Topic).filter(models.chat.Chat.chat_id == chat_id).all():
+                result_dict = {column.name: getattr(chat, column.name) for column in chat.__table__.columns}
+                topic_list = []
+                for topic in chat.topic:
+                    topic = {column.name: getattr(topic, column.name) for column in topic.__table__.columns}
+                    topic_list.append(topic)
+                result_dict["topic"] = topic_list
+                join_chat_topic.append(result_dict)
+
+
+            #
+            # from pydantic import parse_obj_as
+            # from typing import List
+            #
+            # yyyy = parse_obj_as(models.chat.Chat, xxx.all())
+            #
+            # topic_list_db = [{column.name: getattr(chat, column.name) for column in chat.__table__.columns} for chat in self.db.query(models.chat.Chat).join(models.topic.Topic).all()]
+
         except Exception as err:
             raise err
         finally:
             self.db.close()
 
-        if len(topic_list_db) > 0:
+        if len(join_chat_topic) > 0:
             if topic_name:
-                for topic_db in topic_list_db:
-                    if topic_name == topic_db.get("name"):
-                        return topic_db["topic_id"]
+                for chat in join_chat_topic:
+                    for topic in chat['topic']:
+                        if topic_name == topic["name"]:
+                            return topic
                 self.logger.warning('Имя топика "{topic_name}" не найдено в таблице topic.'.format(topic_name=topic_name))
                 return False
             elif chat_id:
-                for chat_db in chat_list_db:
+                for chat_db in join_chat_topic:
                     if chat_id == chat_db.get("chat_id"):
                         return chat_db
                 self.logger.info('Имя чата "{chat_id}" не соответствует имени в кеш-файле.'.format(
@@ -142,10 +162,10 @@ class Telegram:
         #         cache[chat_name] = dict(type=str(chat_type), id=str(update['update_value']), old_id=str(chat_id))
         #
         if update or changed_chat_name:
-            self.logger.info('Обновляем кэш-файл: "{chat_name}" ({chat_id}) -> {update_type}: {update_value}'.format(
+            self.logger.info('Обновляем в таблице chat: "{chat_name}" ({chat_id}) -> {update_type}: {update_value}'.format(
                 **update))
         else:
-            self.logger.info('Добавляем в кэш-файл: "{chat_name}" ({chat_id})'.format(
+            self.logger.info('Добавляем в таблицу chat: "{chat_name}" ({chat_id})'.format(
                 chat_id=chat_id, chat_name=chat_name))
         return True
 
@@ -198,7 +218,8 @@ class Telegram:
 
     def get_send_id(self):
         try:
-            # raise Exception('test err')
+            cache_topic_id = None
+            cache_chat_id = None
             chat = None
             # Указан чат ид
             if re.search('^[0-9]+$', self.send_to) or re.search('^-[0-9]+$', self.send_to):
@@ -216,23 +237,26 @@ class Telegram:
             else:
                 self.chat_name = self.send_to
                 if self.topic:
-                    if re.search('^[0-9]+$', self.topic):
-                        self.topic_id = self.topic
-                    else:
+                    # if re.search('^[0-9]+$', self.topic):
+                    #     self.topic_id = self.topic
+                    # else:
                         self.topic_name = self.topic
 
             cache_chat_id = self.get_chat_db(chat_name=self.chat_name, chat_id=self.chat_id)
 
-            if self.topic:
-                cache_topic_id = self.get_topic_db(topic_id=self.topic_id, topic_name=self.topic_name)
+            if self.topic and cache_chat_id and cache_chat_id['type'] == 'supergroup':
+                cache_topic_id = self.get_topic_db(chat_id=cache_chat_id['chat_id'], topic_id=self.topic_id, topic_name=self.topic_name)
 
             if cache_chat_id:
-                if not self.topic:
-                    self.chat_id = cache_chat_id
+                if cache_chat_id['type'] == 'supergroup' and self.topic and cache_topic_id:
+                    self.chat_id = cache_chat_id['chat_id']
+                    self.topic_id = cache_topic_id["topic_id"]
                     return
-                elif self.topic and cache_topic_id:
-                    self.chat_id = cache_chat_id
-                    self.topic_id = cache_topic_id
+                elif self.topic and not cache_chat_id['type'] == 'supergroup':
+                    self.chat_id = cache_chat_id['chat_id']
+                    return
+                else:
+                    self.chat_id = cache_chat_id['chat_id']
                     return
 
             self.logger.info("Опрашиваем бота о чате (getUpdate)")
@@ -264,7 +288,7 @@ class Telegram:
                 if not cache_chat_id:
                     self.set_chat_db(chat_name=str(chat.title), chat_id=str(chat.id), chat_type=str(chat.type), update=None)
                 if not cache_topic_id and self.topic_name and self.topic_id:
-                    self.set_topic_db(chat_id=str(chat.id), topic_name=str(topic_name), topic_id=str(topic_id), update=None)
+                    self.set_topic_db(chat_id=str(chat.id), topic_name=str(self.topic_name), topic_id=str(self.topic_id), update=None)
                 else:
                     self.logger.warning(
                         'Топик {topic} не найден в чате: "{chat_name}" ({chat_id})'.format(
@@ -274,11 +298,14 @@ class Telegram:
                 self.chat_id = chat.id
                 return
 
-            if chat.type in ["channel"] and chat.title and chat.title == send_to:
-                if not send_id:
-                    set_cache(send_to, chat.id, chat.type)
-                bot.get_updates(timeout=10, offset=-1)
-                return chat.id
+            if chat.type in ["channel"] and chat.title and chat.title == self.chat_name:
+                if not cache_chat_id:
+                    # set_cache(send_to, chat.id, chat.type)
+                    self.set_chat_db(chat_name=str(chat.title), chat_id=str(chat.id), chat_type=str(chat.type),
+                                     update=None)
+                self.bot.get_updates(timeout=10, offset=-1)
+                self.chat_id = chat.id
+                return
 
             if chat.type in ["private"] and chat.username == self.chat_name.replace("@", ""):
                 self.bot.get_updates(timeout=10, offset=-1)
@@ -286,8 +313,8 @@ class Telegram:
                 return chat.id
 
             raise ValueError(
-                "Имя чата не найдено в таблице chat. Бот не имеет доступа к чтению сообщений в чате или он не добавлен в чат '{sendto}' "
-                "(Добавьте бота @{bot} в чат, дайте права на чтение сообщений и отправьте сообщение в чат.)".format(
+                "Имя чата не найдено в таблице chat. Возможно, бот не имеет доступа к чтению сообщений в чате/группе/канале или он не добавлен в '{sendto}' "
+                "(Добавьте бота @{bot} в чат/группу/канал, дайте права на чтение сообщений и отправьте сообщение в чат.)".format(
                     bot=self.bot.get_me().username,
                     sendto=self.send_to))
         except Exception as err:
@@ -324,7 +351,7 @@ class Telegram:
                                                                  disable_notification=self.disable_notification)
                 except apihelper.ApiException as err:
                     # Проверяем на миграцию chat_id
-                    if 'migrate_to_chat_id' in err.result_json['parameters']:
+                    if 'parameters' in err.result_json and 'migrate_to_chat_id' in err.result_json['parameters']:
                         self.logger.warning('Миграция группы "{chat_name}" ({chat_id}) -> ({new_chat_id})'.format(
                             chat_name=self.chat_name,
                             chat_id=self.chat_id,
@@ -356,7 +383,7 @@ class Telegram:
                                 chat_name=self.chat_name, chat_id=self.chat_id, bot_name=self.bot.get_me().username,
                                 topic_name=self.topic_name, topix_id=self.topic_id, bot_id=self.bot.get_me().id))
                     else:
-                        self.logger.info('Бот @{bot_name}({bot_id}) отправил фото графиков в "{chat_name}" ({chat_id}).'.format(
+                        self.logger.info('Бот @{bot_name} ({bot_id}) отправил фото графиков в "{chat_name}" ({chat_id}).'.format(
                             chat_name=self.chat_name, chat_id=self.chat_id, bot_name=self.bot.get_me().username,
                             bot_id=self.bot.get_me().id))
                     self.response_tg_json = [x.json for x in self.response_tg]

@@ -15,7 +15,7 @@ class Topic(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True, nullable=False)
-    topic_id = Column(Numeric, index=True, nullable=False)
+    topic_id = Column(Integer, index=True, nullable=False)
     # chat_id = relationship("Chat", back_populates="topic")
     chat_id = Column(Integer, ForeignKey("chat.id"))
     chat = relationship("Chat", back_populates="topic")
