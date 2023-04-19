@@ -31,7 +31,7 @@ def send_message(bot_config, send_config):
 
         xx = Telegram(token=znt.bot_token,
                        send_to=send_config.preferences.telegram.send.send_to,
-                       topic=send_config.preferences.telegram.send.topic,
+                       #topic=send_config.preferences.telegram.send.topic,
                        message=znt.message,
                        keyboard=send_config.preferences.znt.options.keyboard,
                        chart_png=znt.chart_png,

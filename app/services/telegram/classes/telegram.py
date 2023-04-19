@@ -23,11 +23,10 @@ from app.api import models
 
 class Telegram:
 
-    def __init__(self, logger, send_to: str, topic: str, chart_png, message: str, keyboard: bool,
+    def __init__(self, logger, send_to: str, chart_png, message: str, keyboard: bool,
                  token: str = None, proxy_use=False, proxy=None, disable_notification=False):
         self.logger = logger
         self.send_to = send_to
-        self.topic = topic
         self.chat_id = None
         self.chat_name = None
         self.topic_name = None
@@ -56,22 +55,22 @@ class Telegram:
         if len(chat_list_db) > 0:
             if chat_name:
                 for chat_db in chat_list_db:
-                    if chat_name == chat_db.get("name"):
+                    if chat_name == chat_db["name"]:
                         return chat_db
                 self.logger.warning('Имя чата "{chat_name}" не найдено в таблице chat.'.format(chat_name=chat_name))
                 return False
             elif chat_id:
                 for chat_db in chat_list_db:
-                    if chat_id == chat_db.get("chat_id"):
+                    if chat_id == str(chat_db['chat_id']):
                         return chat_db
-                self.logger.info('Имя чата "{chat_id}" не соответствует имени в таблице chat.'.format(
+                self.logger.info('Чат "{chat_id}" не найден в таблице chat.'.format(
                     chat_id=chat_id
                 ))
                 return False
             else:
                 pass
         else:
-            self.logger.warning("Чат '{chat_name}' не найден в кэш-файле.".format(chat_name=chat_name))
+            self.logger.warning("Чат '{chat_name}' не найден в таблице chat.".format(chat_name=chat_name))
             return False
 
     def get_topic_db(self, chat_id: str = None, topic_id: str = None, topic_name: str = None):
@@ -108,13 +107,12 @@ class Telegram:
                             return topic
                 self.logger.warning('Имя топика "{topic_name}" не найдено в таблице topic.'.format(topic_name=topic_name))
                 return False
-            elif chat_id:
-                for chat_db in join_chat_topic:
-                    if chat_id == chat_db.get("chat_id"):
-                        return chat_db
-                self.logger.info('Имя чата "{chat_id}" не соответствует имени в кеш-файле.'.format(
-                    chat_id=chat_id
-                ))
+            elif topic_id:
+                for chat in join_chat_topic:
+                    for topic in chat['topic']:
+                        if topic_id == str(topic['topic_id']):
+                            return topic
+                self.logger.info('Ид топика "{topic_id}" не найдено в таблице topic.'.format(topic_id=topic_id))
                 return False
             else:
                 pass
@@ -122,7 +120,7 @@ class Telegram:
             self.logger.warning("Топик '{topic_name}' не найден в таблице topic.".format(topic_name=topic_name))
             return False
 
-    def set_chat_db(self, chat_name: str, chat_id: str, chat_type: str, update: dict, cache=None):
+    def set_chat_db(self, chat_name: str, chat_id: str, chat_type: str, update: dict=None, cache=None):
         changed_chat_name = None
 
         try:
@@ -169,7 +167,7 @@ class Telegram:
                 chat_id=chat_id, chat_name=chat_name))
         return True
 
-    def set_topic_db(self, chat_id: str, topic_id: str, topic_name: str, update: dict, cache=None):
+    def set_topic_db(self, chat_id: str, topic_id: str, topic_name: str, update: dict=None, cache=None):
         changed_chat_name = None
 
         try:
@@ -213,7 +211,7 @@ class Telegram:
             self.logger.info('Обновляем кэш-файл: "{chat_name}" ({chat_id}) -> {update_type}: {update_value}'.format(
                 **update))
         else:
-            self.logger.info('Добавляем в таблицу topic:  {topic_name}'.format(topic_name=topic_name))
+            self.logger.info('Добавляем в таблицу topic: {topic_name}'.format(topic_name=topic_name))
         return True
 
     def get_send_id(self):
@@ -221,45 +219,67 @@ class Telegram:
             cache_topic_id = None
             cache_chat_id = None
             chat = None
-            # Указан чат ид
-            if re.search('^[0-9]+$', self.send_to) or re.search('^-[0-9]+$', self.send_to):
+            # Указан ид или ид с топиком
+            if re.search(r"^[0-9]+$|^-[0-9]+$", self.send_to):
                 self.chat_id = self.send_to
-                if re.search('^[0-9]+$', self.topic):
-                    self.topic_id = self.topic
-                else:
-                    self.topic_name = self.topic
+            elif re.search(r"^([0-9]+|-[0-9]+):([0-9]+)$", self.send_to):
+                self.chat_id, self.topic_id = self.send_to.split(sep=':')
+            elif re.search(r"^([0-9]+|-[0-9]+):([\S]+)$", self.send_to):
+                self.chat_id, self.topic_name = self.send_to.split(sep=':')
             # Указан юзернайм
-            elif re.search('^@+[a-zA-Z0-9_]{5,}$', self.send_to):
-                self.chat_id = self.send_to[1:]
+            elif re.search(r"^@+[a-zA-Z0-9_]{5,}$", self.send_to):
+                self.chat_name = self.send_to[1:]
+
+            # Указан имя группы и топик
+            elif re.search(r"^(.*):(.*)$", self.send_to):
+                self.chat_name, self.topic_name = self.send_to.split(sep=':')
+
+
             elif not self.send_to:
                 raise ValueError('Username or groupname is not specified. You can use for username '
                                  '@[a-z,A-Z,0-9 and underscores] and for groupname any characters. ')
             else:
                 self.chat_name = self.send_to
-                if self.topic:
-                    # if re.search('^[0-9]+$', self.topic):
-                    #     self.topic_id = self.topic
-                    # else:
-                        self.topic_name = self.topic
-
+            # Опрашиваем таблицу chat
             cache_chat_id = self.get_chat_db(chat_name=self.chat_name, chat_id=self.chat_id)
 
-            if self.topic and cache_chat_id and cache_chat_id['type'] == 'supergroup':
-                cache_topic_id = self.get_topic_db(chat_id=cache_chat_id['chat_id'], topic_id=self.topic_id, topic_name=self.topic_name)
+            # Опрашиваем таблицу topic
+            if (self.topic_id or self.topic_name) and cache_chat_id and cache_chat_id['type'] == 'supergroup':
+                cache_topic_id = self.get_topic_db(chat_id=cache_chat_id['chat_id'], topic_id=self.topic_id,
+                                                   topic_name=self.topic_name)
 
-            if cache_chat_id:
-                if cache_chat_id['type'] == 'supergroup' and self.topic and cache_topic_id:
+            if not cache_chat_id:
+                self.get_update(type='chat')
+            else:
+                # супергруппа + найден топик в бд
+                if cache_chat_id['type'] == 'supergroup' and cache_topic_id:
                     self.chat_id = cache_chat_id['chat_id']
+                    self.chat_name = cache_chat_id['name']
                     self.topic_id = cache_topic_id["topic_id"]
+                    self.topic_name = cache_topic_id['name']
                     return
-                elif self.topic and not cache_chat_id['type'] == 'supergroup':
+                # не супергруппа + найден топик в бд
+                elif not cache_chat_id['type'] == 'supergroup' and cache_topic_id:
                     self.chat_id = cache_chat_id['chat_id']
+                    self.chat_name = cache_chat_id['name']
+                    self.logger.info('Данная группа не содержит топиков.'.format())
                     return
+                # ид или имя топика + супергруппа + не найден топик в бд
+                elif (self.topic_id or self.topic_name) and cache_chat_id['type'] == 'supergroup' and not cache_topic_id:
+                    self.chat_id = cache_chat_id['chat_id']
+                    self.chat_name = cache_chat_id['name']
+                    self.get_update(type='topic')
                 else:
                     self.chat_id = cache_chat_id['chat_id']
+                    self.chat_name = cache_chat_id['name']
                     return
+        except Exception as err:
+            self.logger.exception("Ошибка: {}".format(err), exc_info=config_exc_info)
+            raise err
 
-            self.logger.info("Опрашиваем бота о чате (getUpdate)")
+    def get_update(self, type: str='chat'):
+        try:
+            self.logger.info("Отправляем запрос в Telegram API (getUpdate)")
             get_updates_list = self.bot.get_updates(timeout=10)
             # if
             sum_del_update_id = 0
@@ -273,50 +293,106 @@ class Telegram:
                     sum_del_update_id, len([value.update_id for value in get_updates_list])))
 
             for line in get_updates_list:
-                if line.message:
+                # Поиск добавления в группы, каналы
+                if line.my_chat_member:
+                    chat = line.my_chat_member.chat
+                    if type == 'chat' and chat.title and self.chat_name and chat.title == self.chat_name:
+                        self.chat_id = chat.id
+                        self.set_chat_db(chat_name=str(chat.title), chat_id=str(chat.id), chat_type=str(chat.type))
+                        self.bot.get_updates(timeout=10, offset=-1)
+                        return
+                # Поиск в сообщениях группы
+                elif line.message:
                     chat = line.message.chat
-                    if chat.is_forum and self.topic_name and not self.topic_id and line.message.forum_topic_created:
-                        if line.message.forum_topic_created.name == self.topic_name:
-                            self.topic_id = line.message.message_thread_id
-                            self.topic_name = line.message.forum_topic_created.name
-                elif line.edited_message:
-                    chat = line.edited_message.chat
+                    if type == 'chat' and chat.type in ["group", "supergroup"] and chat.title:
+                        if self.chat_id and str(chat.id) == self.chat_id:
+                            self.chat_id = str(chat.id)
+                            self.chat_name = chat.title
+                            self.set_chat_db(chat_name=str(chat.title), chat_id=str(chat.id), chat_type=str(chat.type))
+                            self.bot.get_updates(timeout=10, offset=-1)
+                            return
+                        elif self.chat_name and chat.title == self.chat_name:
+                            self.chat_id = str(chat.id)
+                            self.chat_name = chat.title
+                            self.set_chat_db(chat_name=str(chat.title), chat_id=str(chat.id), chat_type=str(chat.type))
+                            self.bot.get_updates(timeout=10, offset=-1)
+                            return
+
+                    # if not cache_topic_id and self.topic_name and self.topic_id:
+                    #     self.set_topic_db(chat_id=str(chat.id), topic_name=str(self.topic_name),
+                    #                       topic_id=str(self.topic_id), update=None)
+                    # else:
+                    #     self.logger.warning(
+                    #         'Топик {topic} не найден в чате: "{chat_name}" ({chat_id})'.format(
+                    #             topic=self.topic, chat_name=self.chat_name, chat_id=self.chat_id))
+
+                    if type == 'topic' and line.message.forum_topic_created:
+                        if self.chat_id and str(chat.id) == str(self.chat_id):
+                            if self.topic_id and str(line.message.id) == self.topic_id:
+                                self.topic_id = str(line.message.id)
+                                self.topic_name = line.message.forum_topic_created.name
+                                self.set_topic_db(chat_id=str(chat.id), topic_name=str(self.topic_name),
+                                                  topic_id=str(self.topic_id), update=None)
+                                self.bot.get_updates(timeout=10, offset=-1)
+                                return
+                            if self.topic_name and str(line.message.forum_topic_created.name) == self.topic_name:
+                                self.topic_id = str(line.message.id)
+                                self.topic_name = line.message.forum_topic_created.name
+                                self.set_topic_db(chat_id=str(chat.id), topic_name=str(self.topic_name),
+                                                  topic_id=str(self.topic_id), update=None)
+                                self.bot.get_updates(timeout=10, offset=-1)
+                                return
+                            # self.logger.warning('Топик {topic} не найден в чате: "{chat_name}" ({chat_id})'.format(
+                            #     topic=self.topic_id, chat_name=self.chat_name, chat_id=self.chat_id))
+
+                    if type == 'topic' and line.message.is_topic_message:
+                        if self.chat_id and str(chat.id) == str(self.chat_id):
+                            if self.topic_id and str(line.message.message_thread_id) == self.topic_id:
+                                self.topic_id = str(line.message.message_thread_id)
+                                self.topic_name = line.message.reply_to_message.forum_topic_created.name
+                                self.set_topic_db(chat_id=str(chat.id), topic_name=str(self.topic_name),
+                                                  topic_id=str(self.topic_id), update=None)
+                                self.bot.get_updates(timeout=10, offset=-1)
+                                return
+                            if self.topic_name and line.message.reply_to_message.forum_topic_created.name == self.topic_name:
+                                self.topic_id = str(line.message.message_thread_id)
+                                self.topic_name = line.message.reply_to_message.forum_topic_created.name
+                                self.set_topic_db(chat_id=str(chat.id), topic_name=str(self.topic_name),
+                                                  topic_id=str(self.topic_id), update=None)
+                                self.bot.get_updates(timeout=10, offset=-1)
+                                return
+
+                    # if chat.is_forum and self.topic_name and not self.topic_id and line.message.forum_topic_created:
+                    #     if line.message.forum_topic_created.name == self.topic_name:
+                    #         self.topic_id = line.message.message_thread_id
+                    #         self.topic_name = line.message.forum_topic_created.name
+                    if type == 'chat' and chat.type in ["private"] and chat.username and self.chat_name and chat.username == self.chat_name.replace("@", ""):
+                        self.chat_id = line.message.chat.id
+                        self.set_chat_db(chat_name=str(chat.username), chat_id=str(chat.id), chat_type=str(chat.type))
+                        self.bot.get_updates(timeout=10, offset=-1)
+                        return
+                # elif line.edited_message:
+                #     chat = line.edited_message.chat
+                # Поиск в постах канала
                 elif line.channel_post:
                     chat = line.channel_post.chat
-
-            if chat.type in ["group", "supergroup"] and chat.title and chat.title == self.chat_name:
-                if not cache_chat_id:
-                    self.set_chat_db(chat_name=str(chat.title), chat_id=str(chat.id), chat_type=str(chat.type), update=None)
-                if not cache_topic_id and self.topic_name and self.topic_id:
-                    self.set_topic_db(chat_id=str(chat.id), topic_name=str(self.topic_name), topic_id=str(self.topic_id), update=None)
-                else:
-                    self.logger.warning(
-                        'Топик {topic} не найден в чате: "{chat_name}" ({chat_id})'.format(
-                            topic=self.topic, chat_name=self.chat_name, chat_id=self.chat_id))
-
-                self.bot.get_updates(timeout=10, offset=-1)
-                self.chat_id = chat.id
-                return
-
-            if chat.type in ["channel"] and chat.title and chat.title == self.chat_name:
-                if not cache_chat_id:
-                    # set_cache(send_to, chat.id, chat.type)
-                    self.set_chat_db(chat_name=str(chat.title), chat_id=str(chat.id), chat_type=str(chat.type),
-                                     update=None)
-                self.bot.get_updates(timeout=10, offset=-1)
-                self.chat_id = chat.id
-                return
-
-            if chat.type in ["private"] and chat.username == self.chat_name.replace("@", ""):
-                self.bot.get_updates(timeout=10, offset=-1)
-                self.chat_id = chat.id
-                return chat.id
-
-            raise ValueError(
-                "Имя чата не найдено в таблице chat. Возможно, бот не имеет доступа к чтению сообщений в чате/группе/канале или он не добавлен в '{sendto}' "
-                "(Добавьте бота @{bot} в чат/группу/канал, дайте права на чтение сообщений и отправьте сообщение в чат.)".format(
+                    if type == 'chat' and chat.title and self.chat_name and chat.title == self.chat_name:
+                        self.chat_id = chat.id
+                        self.set_chat_db(chat_name=str(chat.title), chat_id=str(chat.id), chat_type=str(chat.type),
+                                         update=None)
+                        self.bot.get_updates(timeout=10, offset=-1)
+                        return
+            if type == 'chat':
+                raise ValueError(
+                    'Упоминание чата "{sendto}" в истории не найдено. Возможно, бот не имеет доступа к чтению сообщений в чате/группе/канале или он не добавлен в "{sendto}"'
+                    '(Добавьте бота @{bot} в чат/группу/канал, выдайте права на чтение сообщений и отправьте любое сообщение в чат.)'.format(
                     bot=self.bot.get_me().username,
                     sendto=self.send_to))
+            elif type == 'topic':
+                raise ValueError(
+                    'Упоминание топика в истории группы "{sendto}" не найдено. Возможно, топик не существует в группе или был переименован. Попробуйте отправить сообщение в топик'.format(
+                        bot=self.bot.get_me().username,
+                        sendto=self.send_to))
         except Exception as err:
             self.logger.exception("Ошибка: {}".format(err), exc_info=config_exc_info)
             raise err
@@ -352,7 +428,7 @@ class Telegram:
                 except apihelper.ApiException as err:
                     # Проверяем на миграцию chat_id
                     if 'parameters' in err.result_json and 'migrate_to_chat_id' in err.result_json['parameters']:
-                        self.logger.warning('Миграция группы "{chat_name}" ({chat_id}) -> ({new_chat_id})'.format(
+                        self.logger.warning('Зафиксирована миграция группы "{chat_name}" ({chat_id}) -> ({new_chat_id})'.format(
                             chat_name=self.chat_name,
                             chat_id=self.chat_id,
                             new_chat_id=err.result_json['parameters']['migrate_to_chat_id'])
@@ -379,11 +455,11 @@ class Telegram:
                                 chat_name=self.chat_name, new_chat_name=self.response_tg[0].chat.title))
                     if self.topic_id:
                         self.logger.info(
-                            'Бот @{bot_name}({bot_id}) отправил фото графиков в "{chat_name}" ({chat_id}), топик "{topic_name}" ({topix_id})'.format(
+                            'Бот @{bot_name} ({bot_id}) отправил фото графиков в "{chat_name}" ({chat_id}), топик "{topic_name}" ({topix_id})'.format(
                                 chat_name=self.chat_name, chat_id=self.chat_id, bot_name=self.bot.get_me().username,
                                 topic_name=self.topic_name, topix_id=self.topic_id, bot_id=self.bot.get_me().id))
                     else:
-                        self.logger.info('Бот @{bot_name} ({bot_id}) отправил фото графиков в "{chat_name}" ({chat_id}).'.format(
+                        self.logger.info('Бот @{bot_name} ({bot_id}) отправил фото графиков в чат "{chat_name}" ({chat_id}).'.format(
                             chat_name=self.chat_name, chat_id=self.chat_id, bot_name=self.bot.get_me().username,
                             bot_id=self.bot.get_me().id))
                     self.response_tg_json = [x.json for x in self.response_tg]
