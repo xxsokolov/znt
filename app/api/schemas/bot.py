@@ -17,13 +17,17 @@ from .proxy import FullProxy
 
 class BaseBot(BaseModel):
     name: str = Query(default=None, regex="^(?=.{5,35}$)@[a-zA-Z0-9_]+(?:bot|Bot)")
+    group: str = None
     description: str = None
-    bot_group: str = None
     priority: int = 0
 
 
 class AddBot(BaseBot):
     token: str = None
+
+
+class DeleteBot(BaseBot):
+    pass
 
 
 class FullBot(BaseBot):

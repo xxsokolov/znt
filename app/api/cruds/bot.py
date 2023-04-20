@@ -8,12 +8,14 @@
 from sqlalchemy.orm import Session
 from app.api import schemas, models
 
-def get_bots(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.bot.Bot).offset(skip).limit(limit).all()
 
-
-def get_bot_by_name(db: Session, name: str):
-    return db.query(models.bot.Bot).filter(models.bot.Bot.name == name).first()
+def find_bot(db: Session, bot_id: int = None, name: str = None):
+    if bot_id:
+        return db.query(models.bot.Bot).filter(models.bot.Bot.id == bot_id).all()
+    elif name:
+        return db.query(models.bot.Bot).filter(models.bot.Bot.name == name).all()
+    else:
+        return db.query(models.bot.Bot).all()
 
 
 def add_bot(db: Session, bot: schemas.bot.AddBot):
@@ -23,3 +25,8 @@ def add_bot(db: Session, bot: schemas.bot.AddBot):
     db.refresh(db_bot)
     return db_bot
 
+
+def delete_bot(db: Session, bot_id: int):
+    db.query(models.bot.Bot).filter(models.bot.Bot.id == bot_id).delete()
+    db.commit()
+    return {"ok": True}
