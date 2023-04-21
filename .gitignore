@@ -8,3 +8,4 @@ app/services/telegram/config.py
 *.cache
 *.backup
 *.exe
+/tests/.pytest_cache/
