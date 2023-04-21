@@ -10,6 +10,6 @@ from fastapi import APIRouter, status
 healthcheck_router = APIRouter()
 
 
-@healthcheck_router.get("/healthcheck/", status_code=status.HTTP_200_OK, summary="Состояние сервиса")
+@healthcheck_router.get("/healthcheck", status_code=status.HTTP_200_OK, summary="Состояние сервиса")
 async def healthcheck():
     return {"status": "ok"}

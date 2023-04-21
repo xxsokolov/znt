@@ -26,7 +26,7 @@ def get_db():
         db.close()
 
 
-@bot_router.get("/bot/", response_model=list[schemas.bot.FullBot], summary="Найти бота")
+@bot_router.get("/bot", response_model=list[schemas.bot.FullBot], summary="Найти бота")
 def find_bot(
         id: Union[int, None] = None,
         name: Union[str, None] = Query(None, regex="^(?=.{5,35}$)@[a-zA-Z0-9_]+(?:bot|Bot)"),
@@ -37,7 +37,7 @@ def find_bot(
     return find_bot
 
 
-@bot_router.post("/bot/add", response_model=schemas.bot.FullBot, summary="Добавить бота")
+@bot_router.post("/bot", response_model=schemas.bot.FullBot, summary="Добавить бота")
 def add_bot(bot: schemas.bot.AddBot, db: Session = Depends(get_db)):
     if cruds.bot.find_bot(db, name=bot.name):
         raise HTTPException(status_code=400, detail="Бот {bot.name} уже существует".format(bot=bot))
@@ -53,4 +53,6 @@ def delete_bot_by_id(
     if get_bot_id is None:
         raise HTTPException(status_code=404, detail="Бот с ид {id} не найден".format(id=id))
     cruds.bot.delete_bot(db, bot_id=id)
-    return JSONResponse(content={"status": "Бот {name} ({id}) удален".format(**get_bot_id.__dict__)})
+    return JSONResponse(content={"status": "Бот {name} ({id}) удален".format(name=get_bot_id[0].name,
+                                                                             id=get_bot_id[0].id)})
+
