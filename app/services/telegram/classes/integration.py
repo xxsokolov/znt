@@ -56,7 +56,7 @@ class ZabbixReq:
             else:
                 return False
         except Exception as err:
-            self.logger.error("Exception occurred: {}".format(err)), exit(1)
+            self.logger.error("Ошибка подключения к Zabbix: {}".format(err))
 
 
 class Grafana:

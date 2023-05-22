@@ -417,7 +417,7 @@ class Telegram:
     def __send_messages(self):
         self.get_send_id()
         if self.message and self.chat_id:
-            if isinstance(self.chart_png, list) and self.chart_png[0]:
+            if isinstance(self.chart_png, list) and any(True if x else False for x in self.chart_png):
                 try:
                     chart_png = [InputMediaPhoto(x) for x in self.chart_png]
                     chart_png[0].caption = self.message
@@ -492,12 +492,12 @@ class Telegram:
                     self.logger.critical("Ошибка: {}".format(err), exc_info=config_exc_info)
                     raise SystemExit(1)
                 else:
-                    if not self.response_tg[0].chat.title == self.chat_name:
+                    if not self.response_tg.chat.title == self.chat_name:
                         self.logger.warning(
                             'Вы отправляете сообщение в чат "{chat_name}", но имя было изменено на '
                             '"{new_chat_name}". Измените получателя "Send to" в Zabbix: User -> media'.format(
-                                chat_name=self.chat_name, new_chat_name=self.response_tg[0].chat.title))
+                                chat_name=self.chat_name, new_chat_name=self.response_tg.chat.title))
                     self.logger.info('Бот @{bot_name}({bot_id}) отправил сообщение в "{chat_name}" ({chat_id}).'.format(
                         chat_name=self.chat_name, chat_id=self.chat_id, bot_name=self.bot.get_me().username,
                         bot_id=self.bot.get_me().id))
-                    self.response_tg_json = [x.json for x in self.response_tg]
+                    self.response_tg_json = self.response_tg.json

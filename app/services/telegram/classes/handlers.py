@@ -57,7 +57,7 @@ class ZNT:
         self.__create_tags()
         self.__create_mentions_list()
         self.__create_chart()
-        if self.chart_png:
+        if any(True if x else False for x in self.chart_png):
             self.__watermark_text()
         self.__create_message()
 
