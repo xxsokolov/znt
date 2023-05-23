@@ -1,31 +1,29 @@
 # -*- coding: utf-8 -*-
-########################
-#    Sokolov Dmitry    #
-# xx.sokolov@gmail.com #
-#  https://t.me/ZbxNTg #
-########################
-# https://github.com/xxsokolov/znt
-__author__ = "Sokolov Dmitry"
-__maintainer__ = "Sokolov Dmitry"
-__license__ = "MIT"
+####################################
+#          Sokolov Dmitry          #
+#       xx.sokolov@gmail.com       #
+#        https://t.me/ZbxNTg       #
+####################################
+# https://github.com/xxsokolov/znt #
+####################################
 import re
 import json
 
-from sqlalchemy.orm import joinedload
+# from sqlalchemy.orm import joinedload
 from telebot import TeleBot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
 from telebot import apihelper
 
 from app.databases.database import SessionLocal
-from app.services.telegram.config import *
+from app import config, logger
 from app.api import models
 
 
 class Telegram:
 
-    def __init__(self, logger, send_to: str, chart_png, message: str, keyboard: bool,
+    def __init__(self, send_to: str, chart_png, message: str, keyboard: bool,
                  token: str = None, proxy_use=False, proxy=None, disable_notification=False):
-        self.logger = logger
+        self.logger = logger.log
         self.send_to = send_to
         self.chat_id = None
         self.chat_name = None
@@ -274,7 +272,7 @@ class Telegram:
                     self.chat_name = cache_chat_id['name']
                     return
         except Exception as err:
-            self.logger.exception("Ошибка: {}".format(err), exc_info=config_exc_info)
+            self.logger.exception("Ошибка: {}".format(err), exc_info=config.get('core', 'exc_info'))
             raise err
 
     def get_update(self, type: str='chat'):
@@ -394,7 +392,7 @@ class Telegram:
                         bot=self.bot.get_me().username,
                         sendto=self.send_to))
         except Exception as err:
-            self.logger.exception("Ошибка: {}".format(err), exc_info=config_exc_info)
+            self.logger.exception("Ошибка: {}".format(err), exc_info=config.get('core', 'exc_info'))
             raise err
 
 
@@ -442,10 +440,10 @@ class Telegram:
                         self.__send_messages()
                     else:
                         self.logger.critical("Ошибка в Api Telegram: {}".format(err),
-                                             exc_info=config_exc_info)
+                                             exc_info=config.get('core', 'exc_info'))
                         raise err
                 except Exception as err:
-                    self.logger.critical("Ошибка: {}".format(err), exc_info=config_exc_info)
+                    self.logger.critical("Ошибка: {}".format(err), exc_info=config.get('core', 'exc_info'))
                     raise SystemExit(1)
                 else:
                     if not self.response_tg[0].chat.title == self.chat_name:
@@ -486,10 +484,10 @@ class Telegram:
                         self.__send_messages()
                     else:
                         self.logger.critical("Ошибка в Api Telegram: {}".format(err),
-                                             exc_info=config_exc_info)
+                                             exc_info=config.get('core', 'exc_info'))
                         raise err
                 except Exception as err:
-                    self.logger.critical("Ошибка: {}".format(err), exc_info=config_exc_info)
+                    self.logger.critical("Ошибка: {}".format(err), exc_info=config.get('core', 'exc_info'))
                     raise SystemExit(1)
                 else:
                     if not self.response_tg.chat.title == self.chat_name:

@@ -1,30 +1,25 @@
 # -*- coding: utf-8 -*-
-########################
-#    Sokolov Dmitry    #
-# xx.sokolov@gmail.com #
-#  https://t.me/ZbxNTg #
-########################
-# https://github.com/xxsokolov/znt
-__author__ = "Sokolov Dmitry"
-__maintainer__ = "Sokolov Dmitry"
-__license__ = "MIT"
-
+####################################
+#          Sokolov Dmitry          #
+#       xx.sokolov@gmail.com       #
+#        https://t.me/ZbxNTg       #
+####################################
+# https://github.com/xxsokolov/znt #
+####################################
 import yaml
 import json
 from types import SimpleNamespace
-
-
-
+from app import logger
 
 
 class ReadParam:
 
-    def __init__(self, logger, path=None, json=None):
+    def __init__(self, path=None, json=None):
         self.path = path
         self.json = json
         self.namespace = None
         self.dict = None
-        self.logger = logger
+        self.logger = logger.log
         #self.args = args
 
     def read_command_line(self):

@@ -1,7 +1,7 @@
 venv
 .idea
 .run
-.env
+docker/.env
 app/services/telegram/config.py
 *.yaml
 *.log

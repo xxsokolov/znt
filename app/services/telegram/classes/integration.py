@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
-########################
-#    Sokolov Dmitry    #
-# xx.sokolov@gmail.com #
-#  https://t.me/ZbxNTg #
-########################
-# https://github.com/xxsokolov/znt
+####################################
+#          Sokolov Dmitry          #
+#       xx.sokolov@gmail.com       #
+#        https://t.me/ZbxNTg       #
+####################################
+# https://github.com/xxsokolov/znt #
+####################################
 __author__ = "Sokolov Dmitry"
 __maintainer__ = "Sokolov Dmitry"
 __license__ = "MIT"
@@ -12,15 +12,15 @@ import requests
 import urllib3
 from grafana_client import GrafanaApi
 from typing import Union
-from app.services.telegram.config import *
+from app import config, logger
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-
+config.get('zabbix', 'password')
 class ZabbixReq:
 
-    def __init__(self, logger, url, login, password, chart):
-        self.logger = logger
+    def __init__(self, url, login, password, chart):
+        self.logger = logger.log
         self.url = url
         self.login = login
         self.password = password
@@ -45,7 +45,7 @@ class ZabbixReq:
     def get_chart_png(self, itemid, name, period=None):
         try:
             if self.__get_cookie():
-                response = requests.get(zabbix_graph_chart.format(
+                response = requests.get(config.get('zabbix', 'zabbix_graph_chart').format(
                     name=name,
                     itemid=itemid,
                     zabbix_server=self.url,
@@ -79,7 +79,7 @@ class Grafana:
                                                    credential=(self.login, self.password))
             url = self.api_grafana.dashboard.get_dashboard(uid)['meta']['url']
         except Exception as err:
-            self.logger.error("Ошибка подключения к Grafana API. \n{}".format(err))
+            self.logger.error("Ошибка подключения к Grafana API ({}) {}".format(self.api_grafana.url, err))
             return False
 
         else:

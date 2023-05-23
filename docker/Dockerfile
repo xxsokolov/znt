@@ -9,7 +9,7 @@ ENV PYTHONUNBUFFERED 1
 RUN mkdir -p $workdir
 WORKDIR $workdir
 RUN pip install --upgrade pip
-COPY . .
+COPY .. .
 RUN pip install --no-cache-dir --upgrade -r $workdir/.requirements
 ENTRYPOINT ["python", "app/znt.py", "api"]
 
