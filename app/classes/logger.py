@@ -48,14 +48,14 @@ class Log:
         self.log = logging.getLogger(None if debug else __name__)
         self.log.setLevel(self.log_level)
 
-        # self.uvicorn_logger = logging.getLogger('uvicorn')
-        # self.uvicorn_logger.propagate = True
+        self.uvicorn_logger = logging.getLogger('uvicorn')
+        self.uvicorn_logger.propagate = True
 
-        self.uvicorn_logger_access = logging.getLogger('uvicorn.access')
-        self.uvicorn_logger_access.propagate = True
-
-        self.uvicorn_logger_error = logging.getLogger('uvicorn.error')
-        self.uvicorn_logger_error.propagate = True
+        # self.uvicorn_logger_access = logging.getLogger('uvicorn.access')
+        # self.uvicorn_logger_access.propagate = True
+        #
+        # self.uvicorn_logger_error = logging.getLogger('uvicorn.error')
+        # self.uvicorn_logger_error.propagate = True
 
         self.sqlalchemy_engine = logging.getLogger('sqlalchemy.engine').setLevel(self.log_level)
         self.sqlalchemy_pool = logging.getLogger('sqlalchemy.pool').setLevel(self.log_level)
@@ -63,16 +63,16 @@ class Log:
 
         stdout_handler = logging.StreamHandler(sys.stdout)
         stdout_handler.setLevel(self.log_level)
-        stdout_handler.setFormatter(CustomFormatter(fmt="[%(asctime)s] - PID:%(process)s - %(filename)s:%(lineno)d - %(levelname)s: %(message)s"))
+        stdout_handler.setFormatter(CustomFormatter(fmt="[%(asctime)s] - PID:%(process)s - %(name)s - %(filename)s:%(lineno)d - %(levelname)s: %(message)s"))
 
         # file_handler = logging.FileHandler(filename=config_log_file, mode='a')
         # file_handler.setLevel(self.log_level)
         # file_handler.setFormatter(log_format)
 
         self.log.addHandler(stdout_handler)
-        # self.uvicorn_logger.addHandler(stdout_handler)
-        self.uvicorn_logger_access.addHandler(stdout_handler)
-        self.uvicorn_logger_error.addHandler(stdout_handler)
+        self.uvicorn_logger.addHandler(stdout_handler)
+        # self.uvicorn_logger_access.addHandler(stdout_handler)
+        # self.uvicorn_logger_error.addHandler(stdout_handler)
 
         # self.sqlalchemy_engine.setLevel(logging.DEBUG)
         # self.sqlalchemy_engine.addHandler(stdout_handler)

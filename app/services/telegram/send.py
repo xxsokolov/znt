@@ -14,10 +14,7 @@ from .classes.handlers import ZNT
 from .classes.telegram import Telegram
 
 from .classes.parameters import ReadParam
-from .classes.logger import Log
-from app import config
-
-logger = Log(bool(True if os.environ.get("DEBUG") == 'True' else False)).log
+from app import config, logger
 
 
 def send_message(bot_config, send_config):
