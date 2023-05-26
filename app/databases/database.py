@@ -11,11 +11,11 @@ from sqlalchemy.orm import sessionmaker
 # from sqlalchemy.engine import URL
 # from sqlalchemy import inspect
 # import os
-import configparser
+from app import config
 
 
-config = configparser.ConfigParser()
-config.read("znt.cfg")
+# config = configparser.ConfigParser()
+# config.read("znt.cfg")
 
 # xxx = config.get('core', 'sqlalchemy_conn')
 # url_object = URL.create(
@@ -28,7 +28,7 @@ config.read("znt.cfg")
 # )
 # db_schema = os.environ.get("ZNT_DB_SCHEMA")
 # meta = MetaData(schema=db_schema)
-debug_mode = bool(True if config.get('logging', 'logging_level') == 'DEBUG' else False)
+# debug_mode = bool(True if config.get('logging', 'logging_level') == 'DEBUG' else False)
 engine = create_engine(config.get('core', 'sqlalchemy_conn'), connect_args={"application_name": "ZNT"},
                        pool_size=2, max_overflow=8, pool_recycle=300, pool_pre_ping=True, pool_use_lifo=True)
 

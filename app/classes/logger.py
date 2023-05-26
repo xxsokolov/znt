@@ -49,7 +49,7 @@ class Log:
         self.log.setLevel(self.log_level)
 
         self.uvicorn_logger = logging.getLogger('uvicorn')
-        self.uvicorn_logger.propagate = True
+        self.uvicorn_logger.propagate = False
 
         # self.uvicorn_logger_access = logging.getLogger('uvicorn.access')
         # self.uvicorn_logger_access.propagate = True
