@@ -8,6 +8,7 @@
 __author__ = "Sokolov Dmitry"
 __maintainer__ = "Sokolov Dmitry"
 __license__ = "MIT"
+from time import sleep
 import requests
 import urllib3
 from grafana_client import GrafanaApi
@@ -72,18 +73,27 @@ class Grafana:
         self.logger = logger
 
     def api_get_dashboard(self, uid) -> Union[bool, str]:
-        try:
-            self.api_grafana = GrafanaApi.from_url(url="{proto}://{host}:{port}/".format(proto=self.proto,
-                                                                                         host=self.host,
-                                                                                         port=self.port),
-                                                   credential=(self.login, self.password))
-            url = self.api_grafana.dashboard.get_dashboard(uid)['meta']['url']
-        except Exception as err:
-            self.logger.error("Ошибка подключения к Grafana API ({}) {}".format(self.api_grafana.url, err))
-            return False
-
-        else:
-            return url
+        attempts = 0
+        connect_max_attempts = int(config.get('grafana', 'connect_max_attempts'))
+        connect_timeout = int(config.get('grafana', 'connect_timeout'))
+        self.logger.debug("Подключаемся к Grafana API.")
+        while attempts < connect_max_attempts:
+            attempts = attempts + 1
+            try:
+                self.api_grafana = GrafanaApi.from_url(
+                    url="{proto}://{host}:{port}/".format(proto=self.proto, host=self.host, port=self.port),
+                    credential=(self.login, self.password))
+                self.api_grafana.client.timeout = connect_timeout
+                url = self.api_grafana.dashboard.get_dashboard(uid)['meta']['url']
+            except Exception as err:
+                self.logger.error("{}/{}: Ошибка подключения к Grafana API ({}) {}".format(
+                    attempts, connect_max_attempts, self.api_grafana.url, err))
+                if attempts == connect_max_attempts:
+                    return False
+                sleep(connect_timeout)
+            else:
+                self.logger.debug("Подключение к Grafana API ({}) установлено.".format(self.api_grafana.url))
+                return url
 
     def get_cookie(self) -> Union[bool, list]:
         try:
