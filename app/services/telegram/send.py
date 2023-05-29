@@ -6,15 +6,14 @@
 ####################################
 # https://github.com/xxsokolov/znt #
 ####################################
-import os
 import traceback
 
-from .classes.integration import ZabbixReq
+from app.classes.integration import ZabbixReq
 from .classes.handlers import ZNT
 from .classes.telegram import Telegram
 
 from .classes.parameters import ReadParam
-from app import config, logger
+from app import config
 
 
 def send_message(bot_config, send_config):

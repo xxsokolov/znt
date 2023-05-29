@@ -73,4 +73,7 @@ def telegram_send_message(schema: schemas.telegram.Message, db: Session = Depend
                             detail={"type": type(err).__name__, "error": str(err), "at": str(traceback.format_exc())},
                             headers={"X-Error": "ERROR"})
     else:
-        return JSONResponse(content={"status": "Собщение отправлено", "request": {**xxx, **dict(response=response.response_tg_json)}})
+        return JSONResponse(content={
+            "status": "Собщение отправлено",
+            "request": {**xxx},
+            "response": {**dict(response=response.response_tg_json)}})

@@ -122,7 +122,7 @@ class ZNT:
             self.chart_png.clear()
             self.chart_png = new_chart_png
         except Exception as err:
-            self.logger.error("Exception occurred: {}".format(err), exc_info=config.get('core', 'exc_info'))
+            self.logger.error("Exception occurred: {}".format(err), exc_info=config.get('logging', 'exc_info'))
             raise err
         else:
             return
@@ -290,7 +290,7 @@ class ZNT:
             else:
                 self.zntsettings = False
         except Exception as err:
-            self.logger.error("Exception occurred: {}".format(err), exc_info=config.get('core', 'exc_info')), exit(1)
+            self.logger.error("Exception occurred: {}".format(err), exc_info=config.get('logging', 'exc_info')), exit(1)
         else:
             self.zntsettings = {'tags': tags_list, config.get('core', 'trigger_settings_tag'): settings_list}
             self.logger.info("Найдены тэги настроек: {}: {}".format(
@@ -311,7 +311,7 @@ class ZNT:
             else:
                 return False
         except Exception as err:
-            self.logger.error("Exception occurred: {}".format(err), exc_info=config.get('core', 'exc_info')), exit(1)
+            self.logger.error("Exception occurred: {}".format(err), exc_info=config.get('logging', 'exc_info')), exit(1)
 
     def __create_links_list(self, _bool=None, url=None, _type=None, url_list=None):
         try:
@@ -362,7 +362,7 @@ class ZNT:
             except Exception as err:
                 self.logger.error("Exception occurred: {}:{}, {}".format(
                     config.get('core', 'trigger_settings_tag'), chart_period_raw, err),
-                    exc_info=config.get('core', 'exc_info')), exit(1)
+                    exc_info=config.get('logging', 'exc_info')), exit(1)
             else:
                 self.chart_period = chart_period
         elif self.options.graphs_period != 'default':
@@ -380,7 +380,7 @@ class ZNT:
             except Exception as err:
                 self.logger.error("Exception occurred: {}:{}, {}".format(
                     config.get('core', 'trigger_settings_tag'), chart_period_raw, err),
-                    exc_info=config.get('core', 'exc_info')), exit(1)
+                    exc_info=config.get('logging', 'exc_info')), exit(1)
             else:
                 self.chart_period = chart_period
         elif self.options.graphs_period != 'default':
@@ -400,7 +400,7 @@ class ZNT:
             except Exception as err:
                 self.logger.error("Exception occurred: {}:{}, {}".format(
                     config.get('core', 'trigger_settings_tag'), settings_raw, err),
-                    exc_info=config.get('core', 'exc_info')), exit(1)
+                    exc_info=config.get('logging', 'exc_info')), exit(1)
             else:
                 # Ищем имя бота отвечающего требованиям Telegram
                 if re.search("^(?=.{5,35}$)@[a-zA-Z0-9_]+(?:bot|Bot)", znts_bot):
@@ -420,7 +420,7 @@ class ZNT:
             except Exception as err:
                 self.logger.error("Exception occurred: {}:{}, {}".format(
                     config.get('core', 'trigger_settings_tag'), settings_raw, err),
-                    exc_info=config.get('core', 'exc_info')), exit(1)
+                    exc_info=config.get('logging', 'exc_info')), exit(1)
             else:
                 self.logger.info("Отправка сообщения через бота в группе: {}: {}".format(config.get('core', 'trigger_settings_tag'), znts_bot_group))
                 list_priority = []
