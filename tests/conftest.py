@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
-########################
-#    Sokolov Dmitry    #
-# xx.sokolov@gmail.com #
-#  https://t.me/ZbxNTg #
-########################
-# https://github.com/xxsokolov/znt
+####################################
+#          Sokolov Dmitry          #
+#       xx.sokolov@gmail.com       #
+#        https://t.me/ZbxNTg       #
+####################################
+# https://github.com/xxsokolov/znt #
+####################################
 import pytest
 
 

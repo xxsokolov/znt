@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
-########################
-#    Sokolov Dmitry    #
-# xx.sokolov@gmail.com #
-#  https://t.me/ZbxNTg #
-########################
-# https://github.com/xxsokolov/znt
+####################################
+#          Sokolov Dmitry          #
+#       xx.sokolov@gmail.com       #
+#        https://t.me/ZbxNTg       #
+####################################
+# https://github.com/xxsokolov/znt #
+####################################
 import sys
 import pytest
 import requests
@@ -41,7 +41,7 @@ def test_znt_bot_get_all():
 @pytest.mark.add_get_del
 def test_znt_bot_post():
     """
-    Тестирование API: znt.bot: POST: Добавление бота
+    Тестирование API: znt.bot: POST: Добавление/Чтение/Удаление бота
     """
     import secrets
     token = secrets.token_hex(16)
