@@ -8,16 +8,14 @@
 __author__ = "Sokolov Dmitry"
 __maintainer__ = "Sokolov Dmitry"
 __license__ = "MIT"
+import os
 from time import sleep
 import requests
-import urllib3
 from grafana_client import GrafanaApi
 from typing import Union
 from app import config, logger
 
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-config.get('zabbix', 'password')
 class ZabbixReq:
 
     def __init__(self, url, login, password, chart):
@@ -26,51 +24,53 @@ class ZabbixReq:
         self.login = login
         self.password = password
         self.chart = chart
-        self.cookie = None
-
-    def __get_cookie(self):
-        try:
-            data_api = {"name": self.login, "password": self.password, "enter": "Sign in"}
-            req_cookie = requests.post(self.url, data=data_api, verify=False)
-            self.cookie = req_cookie.cookies
-            req_cookie.close()
-        except Exception as err:
-            raise Exception(err)
-        else:
-            if not any(_ in self.cookie for _ in ['zbx_session', 'zbx_sessionid']):
-                self.logger.error(
-                    'User authorization failed: {} ({})'.format('Login name or password is incorrect.', self.url))
-                return False
-            return self.cookie
+        self.grafana_cookie = None
 
     def get_chart_png(self, itemid, name, period=None):
-        try:
-            if self.__get_cookie():
-                response = requests.get(config.get('zabbix', 'zabbix_graph_chart').format(
+        attempts = 0
+        connect_max_attempts = int(config.get('zabbix', 'connect_max_attempts'))
+        connect_timeout = int(config.get('zabbix', 'connect_timeout'))
+        self.logger.debug("Подключаемся к Zabbix.")
+        while attempts < connect_max_attempts:
+            attempts = attempts + 1
+            try:
+                s = requests.Session()
+                s.headers["User-Agent"] = "{}/{}".format(os.environ["APPNAME"], os.environ["APPVERSION"])
+
+                data_api = {"name": self.login, "password": self.password, "enter": "Sign in"}
+                req_cookie = s.post(self.url, data=data_api, verify=False, timeout=connect_timeout)
+                cookie = req_cookie.cookies
+                req_cookie.close()
+
+                response = requests.get(url=config.get('zabbix', 'zabbix_graph_chart').format(
                     name=name,
                     itemid=itemid,
                     zabbix_server=self.url,
                     range_time=period),
-                    cookies=self.cookie,
-                    verify=False)
-                return response.content
+                    cookies=cookie,
+                    verify=False,
+                    timeout=connect_timeout)
+            except Exception as err:
+                self.logger.error("{}/{}: Ошибка подключения к Zabbix ({}): {}".format(
+                    attempts, connect_max_attempts, self.url, err))
+                if attempts == connect_max_attempts:
+                    return False
+                sleep(connect_timeout)
             else:
-                return False
-        except Exception as err:
-            self.logger.error("Ошибка подключения к Zabbix: {}".format(err))
+                return response.content
 
 
 class Grafana:
-    def __init__(self, logger):
-        self.host = '192.168.1.200'
-        self.port = '3000'
-        self.proto = 'http'
-        self.login = 'admin'
-        self.password = 'AdminAdmin'
+    def __init__(self):
+        self.host = config.get('grafana', 'host')
+        self.port = config.get('grafana', 'port')
+        self.proto = config.get('grafana', 'proto')
+        self.login = config.get('grafana', 'login')
+        self.password = config.get('grafana', 'password')
         self.cookie = None
         self.api_grafana = None
         self.api_dashboard_url = None
-        self.logger = logger
+        self.logger = logger.log
 
     def api_get_dashboard(self, uid) -> Union[bool, str]:
         attempts = 0
@@ -84,27 +84,37 @@ class Grafana:
                     url="{proto}://{host}:{port}/".format(proto=self.proto, host=self.host, port=self.port),
                     credential=(self.login, self.password))
                 self.api_grafana.client.timeout = connect_timeout
+                self.api_grafana.client.user_agent = "{}/{}".format(os.environ["APPNAME"], os.environ["APPVERSION"])
                 url = self.api_grafana.dashboard.get_dashboard(uid)['meta']['url']
             except Exception as err:
-                self.logger.error("{}/{}: Ошибка подключения к Grafana API ({}) {}".format(
+                self.logger.error("{}/{}: Ошибка подключения к Grafana API ({}): {}".format(
                     attempts, connect_max_attempts, self.api_grafana.url, err))
                 if attempts == connect_max_attempts:
                     return False
                 sleep(connect_timeout)
             else:
-                self.logger.debug("Подключение к Grafana API ({}) установлено.".format(self.api_grafana.url))
+                self.logger.debug("Получение урл дашборда ({}) выполнено успешно.".format(self.api_grafana.url+url[1:]))
                 return url
 
     def get_cookie(self) -> Union[bool, list]:
-        try:
-            base_url = "{proto}://{host}:{port}/login".format(proto=self.proto, host=self.host, port=self.port)
-            data_api = {"user": self.login, "password": self.password}
-            req_cookie = requests.post(base_url, json=data_api, verify=False)
-        except requests.RequestException as err:
-            self.logger.error("Ошибка подключения к Grafana. \n{}".format(err))
-            return False
-        else:
-            self.cookie = []
-            for name, value in req_cookie.cookies.items():
-                self.cookie.append(dict(name=name, value=value))
-            return self.cookie
+        attempts = 0
+        connect_max_attempts = int(config.get('grafana', 'connect_max_attempts'))
+        connect_timeout = int(config.get('grafana', 'connect_timeout'))
+        self.logger.debug("Подключаемся к Grafana для получения cookies.")
+        while attempts < connect_max_attempts:
+            attempts = attempts + 1
+            try:
+                base_url = "{proto}://{host}:{port}/login".format(proto=self.proto, host=self.host, port=self.port)
+                data_api = {"user": self.login, "password": self.password}
+                user_agent = {'User-agent': '{}/{}'.format(os.environ["APPNAME"], os.environ["APPVERSION"])}
+                req_cookie = requests.post(base_url, headers=user_agent, json=data_api, verify=False)
+            except requests.RequestException as err:
+                self.logger.error("Ошибка подключения к Grafana. \n{}".format(err))
+                if attempts == connect_max_attempts:
+                    return False
+                sleep(connect_timeout)
+            else:
+                self.grafana_cookie = []
+                for name, value in req_cookie.cookies.items():
+                    self.grafana_cookie.append(dict(name=name, value=value))
+                return self.grafana_cookie

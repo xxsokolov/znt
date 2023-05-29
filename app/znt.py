@@ -9,6 +9,8 @@
 __author__ = "Sokolov Dmitry"
 __maintainer__ = "Sokolov Dmitry"
 __license__ = "MIT"
+__appname__ = "ZNT Sender"
+__version__ = "2.0"
 
 import os
 import sys

@@ -134,7 +134,7 @@ class ZNT:
             if settings_dash:
                 # Добавляем рендер дашборда Графаны
                 uid = str(settings_dash.split('=')[1])
-                png = RenderingPNG(uid=uid, logger=self.logger).get_screenshot()
+                png = RenderingPNG(uid=uid).get_screenshot()
                 if png:
                     self.chart_png.append(png)
             # Добавляем графики на основании itemid из экшена
