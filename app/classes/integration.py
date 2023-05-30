@@ -10,6 +10,8 @@ __maintainer__ = "Sokolov Dmitry"
 __license__ = "MIT"
 import os
 from time import sleep
+
+import grafana_client.client
 import requests
 from grafana_client import GrafanaApi
 from typing import Union
@@ -72,12 +74,13 @@ class Grafana:
         self.api_dashboard_url = None
         self.logger = logger.log
 
-    def api_get_dashboard(self, uid) -> Union[bool, str]:
+    def api_get_dashboard(self, uid, panel=None) -> Union[bool, str]:
         attempts = 0
         connect_max_attempts = int(config.get('grafana', 'connect_max_attempts'))
         connect_timeout = int(config.get('grafana', 'connect_timeout'))
         self.logger.debug("Подключаемся к Grafana API.")
         while attempts < connect_max_attempts:
+            url = None
             attempts = attempts + 1
             try:
                 self.api_grafana = GrafanaApi.from_url(
@@ -85,7 +88,23 @@ class Grafana:
                     credential=(self.login, self.password))
                 self.api_grafana.client.timeout = connect_timeout
                 self.api_grafana.client.user_agent = "{}/{}".format(os.environ["APPNAME"], os.environ["APPVERSION"])
-                url = self.api_grafana.dashboard.get_dashboard(uid)['meta']['url']
+                if panel:
+                    dash = self.api_grafana.dashboard.get_dashboard(uid)
+                    if dash:
+                        for x in dash['dashboard']['panels']:
+                            if x['id'] == int(panel):
+                                url = self.api_grafana.dashboard.get_dashboard(uid)['meta']['url'] + '?viewPanel={}'.format(panel)
+                                break
+                        if not url:
+                            self.logger.warn('Панель "{0}" на дашборде {1} Grafana не найдена. Проверьте ид панели и дашборда.'.format(panel, uid))
+                            return False
+                    else:
+                        self.logger.warn('Дашборд {} Grafana не найден.'.format(uid))
+                else:
+                    url = self.api_grafana.dashboard.get_dashboard(uid)['meta']['url']
+            except grafana_client.client.GrafanaException as err:
+                self.logger.warn("Ошибка в GrafanaException: {}".format(err))
+                return False
             except Exception as err:
                 self.logger.error("{}/{}: Ошибка подключения к Grafana API ({}): {}".format(
                     attempts, connect_max_attempts, self.api_grafana.url, err))

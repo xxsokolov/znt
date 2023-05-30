@@ -20,12 +20,12 @@ from app import config, logger
 import requests.adapters
 
 class RenderingPNG:
-    def __init__(self, uid):
+    def __init__(self, uid=None, panel=None):
         self.host = config.get('grafana', 'host')
         self.port = config.get('grafana', 'port')
         self.proto = config.get('grafana', 'proto')
         self.logger = logger.log
-        self.url: str = Grafana().api_get_dashboard(uid)
+        self.url: str = Grafana().api_get_dashboard(uid, panel)
         if self.url:
             self.cookie: list = Grafana().get_cookie()
 
@@ -34,9 +34,9 @@ class RenderingPNG:
         driver = None
         connect_max_attempts = int(config.get('selenium', 'connect_max_attempts'))
         connect_timeout = int(config.get('selenium', 'connect_timeout'))
-        self.logger.debug("Подключаемся к selenium/standalone-chrome.")
 
         if self.url and self.cookie:
+            self.logger.debug("Подключаемся к selenium/standalone-chrome.")
             while attempts < connect_max_attempts:
                 attempts = attempts + 1
                 try:
@@ -81,7 +81,7 @@ class RenderingPNG:
                         sleep(2)
                         png = element.screenshot_as_png
                     except Exception as err:
-                        print("Ошибка рендеринга дашборда.\n{}".format(err))
+                        self.logger.error("Ошибка рендеринга дашборда.\n{}".format(err))
                         return False
                     else:
                         return png

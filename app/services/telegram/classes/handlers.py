@@ -132,14 +132,33 @@ class ZNT:
             settings_dash = next(
                 (x for x in self.zntsettings[config.get('core', 'trigger_settings_tag')] if config.get('core', 'trigger_settings_tag_grafana_dash') in x), None)
             if settings_dash:
+                uid = None
+                panel = None
                 # Добавляем рендер дашборда Графаны
-                uid = str(settings_dash.split('=')[1])
-                if uid:
+                if re.findall(r"&", settings_dash):
+                    params = settings_dash.split('&')
+                    for x in params:
+                        if re.findall(r"dash", x):
+                            uid = x.split('=')[1]
+                            if not uid:
+                                self.logger.warn('В теге "{0}" пустой параметр "dash=".'.format(settings_dash))
+                        elif re.findall(r"panel", x):
+                            panel = x.split('=')[1]
+                            if not panel:
+                                self.logger.warn('В теге "{0}" пустой параметр "panel=".'.format(settings_dash))
+                else:
+                    uid = str(settings_dash.split('=')[1])
+
+                if uid and panel:
+                    png = RenderingPNG(uid=uid, panel=panel).get_screenshot()
+                    if png:
+                        self.chart_png.append(png)
+                elif uid:
                     png = RenderingPNG(uid=uid).get_screenshot()
                     if png:
                         self.chart_png.append(png)
                 else:
-                    self.logger.debug(
+                    self.logger.warn(
                         'В теге "{0}" не указан дашборд Grafana. (Прим. {0}YGLp1d14k)'.format(config.get('core', 'trigger_settings_tag_grafana_dash')))
             # Добавляем графики на основании itemid из экшена
             for item_id in list(set([x for x in self.macros.itemid.split()])):
