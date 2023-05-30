@@ -134,9 +134,13 @@ class ZNT:
             if settings_dash:
                 # Добавляем рендер дашборда Графаны
                 uid = str(settings_dash.split('=')[1])
-                png = RenderingPNG(uid=uid).get_screenshot()
-                if png:
-                    self.chart_png.append(png)
+                if uid:
+                    png = RenderingPNG(uid=uid).get_screenshot()
+                    if png:
+                        self.chart_png.append(png)
+                else:
+                    self.logger.debug(
+                        'В теге "{0}" не указан дашборд Grafana. (Прим. {0}YGLp1d14k)'.format(config.get('core', 'trigger_settings_tag_grafana_dash')))
             # Добавляем графики на основании itemid из экшена
             for item_id in list(set([x for x in self.macros.itemid.split()])):
                 if re.findall(r"\d+", item_id):
