@@ -420,9 +420,12 @@ class Telegram:
                     chart_png = [InputMediaPhoto(x) for x in self.chart_png]
                     chart_png[0].caption = self.message
                     chart_png[0].parse_mode = "HTML"
-                    self.response_tg = self.bot.send_media_group(chat_id=self.chat_id, media=chart_png,
-                                                                 reply_to_message_id=self.topic_id if self.topic_id else 0,
-                                                                 disable_notification=self.disable_notification)
+                    self.response_tg = self.bot.send_media_group(
+                        chat_id=self.chat_id,
+                        media=chart_png,
+                        reply_to_message_id=self.topic_id if self.topic_id else 0,
+                        disable_notification=self.disable_notification
+                    )
                 except apihelper.ApiException as err:
                     # Проверяем на миграцию chat_id
                     if 'parameters' in err.result_json and 'migrate_to_chat_id' in err.result_json['parameters']:
@@ -464,8 +467,13 @@ class Telegram:
             else:
                 try:
                     self.response_tg = self.bot.send_message(
-                        chat_id=self.chat_id, text=self.message, parse_mode="HTML", disable_web_page_preview=True,
-                        disable_notification=self.disable_notification)
+                        chat_id=self.chat_id,
+                        text=self.message,
+                        parse_mode="HTML",
+                        disable_web_page_preview=True,
+                        reply_to_message_id=self.topic_id if self.topic_id else 0,
+                        disable_notification=self.disable_notification
+                    )
                 except apihelper.ApiException as err:
                     # Проверяем на миграцию chat_id
                     if 'migrate_to_chat_id' in err.result_json['parameters']:
