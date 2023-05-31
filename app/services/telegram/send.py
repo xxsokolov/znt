@@ -24,7 +24,7 @@ def send_message(bot_config, send_config):
         zabbix_req = ZabbixReq(url=config.get('zabbix', 'url'),
                                login=config.get('zabbix', 'login'),
                                password=config.get('zabbix', 'password'),
-                               chart=config.get('zabbix', 'zabbix_graph_chart'))
+                               chart=config.get('zabbix', 'chart_url'))
         # logger.info("Send to '{}' action: '{}'".format(send_config.preferences.telegram.send.chat_id, send_config.preferences.telegram.send.message.header))
 
         znt = ZNT(bots=bot_config, zabbix_req=zabbix_req,  preferences=send_config.preferences)

@@ -44,7 +44,7 @@ class ZabbixReq:
                 cookie = req_cookie.cookies
                 req_cookie.close()
 
-                response = requests.get(url=config.get('zabbix', 'zabbix_graph_chart').format(
+                response = requests.get(url=config.get('zabbix', 'chart_url').format(
                     name=name,
                     itemid=itemid,
                     zabbix_server=self.url,
