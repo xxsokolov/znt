@@ -138,9 +138,9 @@ class ZNT:
 
     def __create_chart(self):
         if (self.options.graphs and config.get('znt.settings', 'zabbix_graph')) and not self.settings_chart_disable:
-            settings_dash = next(
-                (x for x in self.zntsettings[config.get('znt.settings', 'trigger_settings_tag')] if
-                 config.get('znt.settings', 'trigger_settings_tag_grafana_dash') in x), None)
+
+            settings_dash = next((x for x in self.zntsettings[config.get('znt.settings', 'trigger_settings_tag')] if
+                                  config.get('znt.settings', 'trigger_settings_tag_grafana_dash') in x), None)
             if settings_dash:
                 uid = None
                 panel = None
@@ -148,14 +148,16 @@ class ZNT:
                 if re.findall(r"&", settings_dash):
                     params = settings_dash.split('&')
                     for x in params:
-                        if re.findall(r"dash", x):
+                        if re.findall(config.get('znt.settings', 'trigger_settings_tag_grafana_dash'), x):
                             uid = x.split('=')[1]
                             if not uid:
-                                self.logger.warn('В теге "{0}" пустой параметр "dash=".'.format(settings_dash))
-                        elif re.findall(r"panel", x):
+                                self.logger.warn('В теге "{}" пустой параметр "{}".'.format(
+                                    settings_dash, config.get('znt.settings', 'trigger_settings_tag_grafana_dash')))
+                        elif re.findall(config.get('znt.settings', 'trigger_settings_tag_grafana_panel'), x):
                             panel = x.split('=')[1]
                             if not panel:
-                                self.logger.warn('В теге "{0}" пустой параметр "panel=".'.format(settings_dash))
+                                self.logger.warn('В теге "{}" пустой параметр "{}".'.format(
+                                    settings_dash, config.get('znt.settings', 'trigger_settings_tag_grafana_panel')))
                 else:
                     uid = str(settings_dash.split('=')[1])
 
