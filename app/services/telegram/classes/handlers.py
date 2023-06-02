@@ -14,6 +14,7 @@ import json
 from PIL import Image, ImageDraw, ImageFont
 from .render_grafana import RenderingPNG
 from app import config, logger
+from app.classes.exceptions import *
 
 
 class FailSafeDict(dict):
@@ -368,15 +369,26 @@ class ZNT:
             return config.get('znt.settings', 'body_messages_url_emoji_no_url')
 
     def __handling_settings(self):
-        # no_alert
-        if config.get('znt.settings', 'trigger_settings_tag_no_alert') in \
-                self.zntsettings[config.get('znt.settings', 'trigger_settings_tag')]:
-            self.logger.warning("Отправка сообщения отменена: {}:'{}'".format(
-                config.get('znt.settings', 'trigger_settings_tag'), config.get('znt.settings',
-                                                                               'trigger_settings_tag_no_alert')))
-            self.settings_no_alert = True
-            exit(0)
-
+        settings_send = next((x for x in self.zntsettings[config.get('znt.settings', 'trigger_settings_tag')]
+                             if config.get('znt.settings', 'trigger_settings_tag_send') in x), None)
+        if settings_send:
+            try:
+                znts_send = str(settings_send.split('=')[1])
+            except Exception as err:
+                self.logger.error("Exception occurred: {}: {}".format(
+                    config.get('znt.settings', 'trigger_settings_tag'), err),
+                    exc_info=config.get('logging', 'exc_info')), exit(1)
+            else:
+                if znts_send == 'silent':
+                    self.logger.warn("Отправка сообщения без оповещения: {}:'{}'".format(
+                        config.get('znt.settings', 'trigger_settings_tag'), settings_send))
+                    self.settings_not_notify = True
+                elif znts_send == 'disable':
+                    self.logger.warn("Отправка сообщения отменена: {}:'{}'".format(
+                        config.get('znt.settings', 'trigger_settings_tag'), settings_send))
+                    raise ZNTSettingTags(message="Отправка сообщения отменена", detail="Был найден тег {}:'{}'".format(
+                        config.get('znt.settings', 'trigger_settings_tag'),
+                        settings_send))
         # 'no_graph'
         if config.get('znt.settings', 'trigger_settings_tag_no_graph') in \
                 self.zntsettings[config.get('znt.settings', 'trigger_settings_tag')]:
@@ -384,19 +396,6 @@ class ZNT:
                 config.get('znt.settings', 'trigger_settings_tag'), config.get('znt.settings',
                                                                                'trigger_settings_tag_no_graph')))
             self.settings_no_graph = True
-
-        # 'not_notify'
-        if config.get('znt.settings', 'trigger_settings_tag_not_notify') in self.zntsettings[
-            config.get('znt.settings', 'trigger_settings_tag')]:
-            self.logger.info("Отправка сообщения без оповещения: {}:'{}'".format(
-                config.get('znt.settings', 'trigger_settings_tag'), config.get('znt.settings',
-                                                                               'trigger_settings_tag_not_notify')))
-            self.settings_not_notify = True
-
-        # if trigger_settings_grafana_dash in self.zntsettings[trigger_settings_tag]:
-        #     self.logger.info("Отправка сообщения без оповещения: {}:'{}'".format(trigger_settings_tag,
-        #                                                                          trigger_settings_tag_not_notify))
-        #     self.settings_not_notify = True
 
     def __settings_chart_period(self):
         if isinstance(self.zntsettings, dict) and not all(

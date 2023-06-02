@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.databases.database import SessionLocal
 from app.services.telegram.send import send_message
 from app.api import schemas, models
+from app.classes.exceptions import *
 
 telegram_router = APIRouter()
 
@@ -68,6 +69,8 @@ def telegram_send_message(schema: schemas.telegram.Message, db: Session = Depend
                   "graphs_period": msg['graphs_period']}}}}
     try:
         response = send_message(bot_config=bot_list, send_config=xxx)
+    except ZNTSettingTags as err:
+        return JSONResponse(content=dict(status=dict(message=err.message, detail=err.detail)))
     except Exception as err:
         raise HTTPException(status_code=500,
                             detail={"type": type(err).__name__, "error": str(err), "at": str(traceback.format_exc())},
