@@ -523,9 +523,15 @@ class ZNT:
                     self.bot_proxy = znts_bot['proxy']
                     self.logger.debug("Бот {} найден в БД.".format(self.send.bot))
                     return
-            self.logger.warn("Бот {0} найден в БД, но бот {0} в группу {1} не добавлен. "
-                             "Добавьте бота в группу или удалите группу их action.".format(self.send.bot,
-                                                                                           self.send.bot_group))
+                else:
+                    self.bot_name = znts_bot['name']
+                    self.bot_token = znts_bot['token']
+                    self.bot_proxy_use = znts_bot['proxy_use']
+                    self.bot_proxy = znts_bot['proxy']
+                    self.logger.warn("Бот {0} найден в БД, но бот {0} в группу {1} не добавлен. "
+                                     "Добавьте бота в группу или удалите группу их action.".format(self.send.bot,
+                                                                                                   self.send.bot_group))
+                    return
         elif len(self.send.bot) == 0 and len(self.send.bot_group) > 0:  # Указана только группа
             self.logger.debug("Поиск бота \"{}\" указаного в action.".format(self.send.bot))
             list_priority = []

@@ -17,8 +17,7 @@ import sys
 from fastapi import FastAPI, Request
 from fastapi.middleware.wsgi import WSGIMiddleware
 # from flask import Flask, render_template
-from app import config
-from app import logger
+from app import config, logger
 import uvicorn
 
 current = os.path.dirname(os.path.realpath(__file__))
