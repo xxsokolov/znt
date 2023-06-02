@@ -11,5 +11,3 @@ urllib3
 psycopg2-binary
 grafana_client
 pyTelegramBotAPI
-flask-admin
-flask-login
