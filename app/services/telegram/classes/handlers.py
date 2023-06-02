@@ -431,40 +431,40 @@ class ZNT:
                 settings.find(config.get('znt.settings', 'trigger_settings_tag_graph_period')) and len(settings) > 0
                 for settings in self.zntsettings[config.get('znt.settings', 'trigger_settings_tag')]):
             try:
-                chart_period_raw = [i if i.find(config.get('znt.settings', 'trigger_settings_tag_graph_period')) == 0
-                                    else False for i in self.zntsettings[config.get('znt.settings',
-                                                                                    'trigger_settings_tag')]][0]
-                chart_period = int(chart_period_raw.split('=')[1])
+                chart_period = next((x for x in self.zntsettings[config.get('znt.settings', 'trigger_settings_tag')] if config.get('znt.settings', 'trigger_settings_tag_graph_period') in x), None)
+                znts_period = int(chart_period.split('=')[1])
             except Exception as err:
-                self.logger.error("Exception occurred: {}:{}, {}".format(
-                    config.get('znt.settings', 'trigger_settings_tag'), chart_period_raw, err),
+                self.logger.error("Exception occurred: {}: {}".format(
+                    config.get('znt.settings', 'trigger_settings_tag'), err),
                     exc_info=config.get('logging', 'exc_info')), exit(1)
             else:
-                self.chart_period = chart_period
+                self.logger.warn("Отправка сообщения с измененным периодом графиков: {}:'{}'.".format(
+                    config.get('znt.settings', 'trigger_settings_tag'), chart_period))
+                self.chart_period = znts_period
         elif self.options.graphs_period != 'default':
             self.chart_period = self.options.graphs_period
         else:
             self.chart_period = config.get('znt.settings', 'zabbix_graph_period_default')
 
-    def __settings_bot(self):
-        if isinstance(self.zntsettings, dict) and not all(
-                settings.find(config.get('znt.settings', 'trigger_settings_tag_graph_period')) and len(settings) > 0
-                for settings in self.zntsettings[config.get('znt.settings', 'trigger_settings_tag')]):
-            try:
-                chart_period_raw = [i if i.find(config.get('znt.settings', 'trigger_settings_tag_graph_period')) == 0
-                                    else False for i in self.zntsettings[config.get('znt.settings',
-                                                                                    'trigger_settings_tag')]][0]
-                chart_period = int(chart_period_raw.split('=')[1])
-            except Exception as err:
-                self.logger.error("Exception occurred: {}:{}, {}".format(
-                    config.get('znt.settings', 'trigger_settings_tag'), chart_period_raw, err),
-                    exc_info=config.get('logging', 'exc_info')), exit(1)
-            else:
-                self.chart_period = chart_period
-        elif self.options.graphs_period != 'default':
-            self.chart_period = self.options.graphs_period
-        else:
-            self.chart_period = config.get('znt.settings', 'zabbix_graph_period_default')
+    # def __settings_bot(self):
+    #     if isinstance(self.zntsettings, dict) and not all(
+    #             settings.find(config.get('znt.settings', 'trigger_settings_tag_graph_period')) and len(settings) > 0
+    #             for settings in self.zntsettings[config.get('znt.settings', 'trigger_settings_tag')]):
+    #         try:
+    #             chart_period_raw = [i if i.find(config.get('znt.settings', 'trigger_settings_tag_graph_period')) == 0
+    #                                 else False for i in self.zntsettings[config.get('znt.settings',
+    #                                                                                 'trigger_settings_tag')]][0]
+    #             chart_period = int(chart_period_raw.split('=')[1])
+    #         except Exception as err:
+    #             self.logger.error("Exception occurred: {}:{}, {}".format(
+    #                 config.get('znt.settings', 'trigger_settings_tag'), chart_period_raw, err),
+    #                 exc_info=config.get('logging', 'exc_info')), exit(1)
+    #         else:
+    #             self.chart_period = chart_period
+    #     elif self.options.graphs_period != 'default':
+    #         self.chart_period = self.options.graphs_period
+    #     else:
+    #         self.chart_period = config.get('znt.settings', 'zabbix_graph_period_default')
 
     def __init_bot(self):
         # _default = 'production'
