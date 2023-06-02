@@ -35,9 +35,10 @@ class ZNT:
         self.links: list = []
         self.tags: list = []
         self.zntsettings: dict = {}
-        self.settings_no_graph: bool = False
-        self.settings_no_alert: bool = False
         self.settings_not_notify: bool = False
+        self.settings_chart_disable: bool = False
+        self.settings_chart_single: bool = False
+        self.settings_chart_group: bool = False
         self.mentions: list = []
         self.chart_png: list = []
         self.message: str
@@ -136,7 +137,7 @@ class ZNT:
             return
 
     def __create_chart(self):
-        if (self.options.graphs and config.get('znt.settings', 'zabbix_graph')) and not self.settings_no_graph:
+        if (self.options.graphs and config.get('znt.settings', 'zabbix_graph')) and not self.settings_chart_disable:
             settings_dash = next(
                 (x for x in self.zntsettings[config.get('znt.settings', 'trigger_settings_tag')] if
                  config.get('znt.settings', 'trigger_settings_tag_grafana_dash') in x), None)
@@ -171,10 +172,16 @@ class ZNT:
                         'В теге "{0}" не указан дашборд Grafana. (Прим. {0}YGLp1d14k)'.format(
                             config.get('znt.settings', 'trigger_settings_tag_grafana_dash')))
             # Добавляем графики на основании itemid из экшена
-            for item_id in list(set([x for x in self.macros.itemid.split()])):
+            if self.settings_chart_single:
+                item_id = [x for x in self.macros.itemid.split()][0]
                 if re.findall(r"\d+", item_id):
                     self.chart_png.append(self.zabbix_req.get_chart_png(itemid=item_id, name=self.chart_name,
                                                                         period=self.chart_period))
+            elif self.settings_chart_group:
+                for item_id in list(set([x for x in self.macros.itemid.split()])):
+                    if re.findall(r"\d+", item_id):
+                        self.chart_png.append(self.zabbix_req.get_chart_png(itemid=item_id, name=self.chart_name,
+                                                                            period=self.chart_period))
 
     def __create_links(self):
         # trigger url
@@ -391,6 +398,9 @@ class ZNT:
                     raise ZNTSettingTags(message="Отправка сообщения отменена", detail="Был найден тег {}:'{}'".format(
                         config.get('znt.settings', 'trigger_settings_tag'),
                         settings_send))
+                else:
+                    self.logger.warn("В тегэ {}:'{}' неизвестный параметр.".format(
+                        config.get('znt.settings', 'trigger_settings_tag'), settings_send))
 
         if settings_chart:
             try:
@@ -401,15 +411,20 @@ class ZNT:
                     exc_info=config.get('logging', 'exc_info')), exit(1)
             else:
                 if znts_chart == 'disable':
-                    self.logger.warn("Отправка сообщения без графиков: {}:'{}'".format(
+                    self.logger.warn("Отправка сообщения без графиков: {}:'{}'.".format(
                         config.get('znt.settings', 'trigger_settings_tag'), settings_chart))
-                    self.settings_no_graph = True
-                elif znts_chart == 'xxx':
-                    self.logger.warn("Отправка сообщения отменена: {}:'{}'".format(
-                        config.get('znt.settings', 'trigger_settings_tag'), settings_send))
-                    raise ZNTSettingTags(message="Отправка сообщения отменена", detail="Был найден тег {}:'{}'".format(
-                        config.get('znt.settings', 'trigger_settings_tag'),
-                        settings_send))
+                    self.settings_chart_disable = True
+                elif znts_chart == 'single':
+                    self.logger.warn("Отправка сообщения c одним графиком: {}:'{}'.".format(
+                        config.get('znt.settings', 'trigger_settings_tag'), settings_chart))
+                    self.settings_chart_single = True
+                elif znts_chart == 'group':
+                    self.logger.warn("Отправка сообщения с группой графиков: {}:'{}'.".format(
+                        config.get('znt.settings', 'trigger_settings_tag'), settings_chart))
+                    self.settings_chart_group = True
+                else:
+                    self.logger.warn("В тегэ {}:'{}' неизвестный параметр.".format(
+                        config.get('znt.settings', 'trigger_settings_tag'), settings_chart))
 
     def __settings_chart_period(self):
         if isinstance(self.zntsettings, dict) and not all(
