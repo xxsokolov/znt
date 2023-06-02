@@ -8,7 +8,7 @@ uvicorn[standard]
 python-dotenv
 pydantic
 urllib3
-psycopg2
+psycopg2-binary
 grafana_client
 pyTelegramBotAPI
 flask-admin
