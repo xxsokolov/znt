@@ -1,0 +1,16 @@
+[Unit]
+Description=ZNT Webserver Daemon
+Documentation=https://github.com/xxsokolov/znt
+After=network.target postgresql.service mysql.service
+Wants=postgresql.service mysql.service
+
+[Service]
+Environment="PATH=/opt/znt/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Type=simple
+ExecStart=bash -c 'source /opt/znt/bin/activate; cd /opt/znt/app; python znt.py'
+Restart=on-failure
+RestartSec=5s
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
