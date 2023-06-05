@@ -63,6 +63,8 @@ class Log:
         parent = os.path.dirname(current)
         log_file = config.get('logging', 'log_file')
 
+        if not log_file:
+            os.makedirs(os.path.join(parent, 'logs'), exist_ok=True)
         file_handler = logging.FileHandler(filename=log_file if log_file else os.path.join(parent, 'logs', 'znt.log'),
                                            mode='a')
         file_handler.setLevel(self.log_level)
