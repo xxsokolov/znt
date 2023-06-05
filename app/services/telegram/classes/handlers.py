@@ -69,17 +69,19 @@ class ZNT:
         if config.getboolean('znt.settings', 'body_messages_cut_symbol') and len(self.send.message.body) > int(
                 config.get('znt.settings', 'body_messages_max_symbol')):
             truncated = True
-            self.logger.info(
-                "Message truncated to {} characters".format(config.get('znt.settings', 'body_messages_max_symbol')))
+            self.logger.warn(
+                "Сообщение образоно до {} символов".format(config.get('znt.settings', 'body_messages_max_symbol')))
         else:
             truncated = False
         body = '{} <a href="{}">...</a>'.format(
-            html.escape(self.send.message.body)[:config.get('znt.settings', 'body_messages_max_symbol')],
+            html.escape(self.send.message.body)[:int(config.get('znt.settings', 'body_messages_max_symbol'))],
             config.get('zabbix', 'event_url').format(
-                zabbix_server=config.get('zabbix', 'url'), eventid=self.macros.eventid,
+                zabbix_server=config.get('zabbix', 'url'),
+                eventid=self.macros.eventid,
                 triggerid=self.macros.triggerid)) if truncated else html.escape(self.send.message.body)
 
-        links = ' '.join(self.links) if config.getboolean('znt.settings', 'body_messages_url') and len(self.links) != 0 else ''
+        links = ' '.join(x for x in self.links if x) if config.getboolean('znt.settings', 'body_messages_url') and len(
+            self.links) != 0 else ''
 
         tags = ' '.join(self.tags) if config.getboolean('znt.settings', 'body_messages_tags') and len(self.tags) != 0 else ''
 
@@ -192,8 +194,7 @@ class ZNT:
     def __create_links(self):
         # trigger url
         self.links.append(self.__create_links_list(
-            _bool=True if self.options.triggerlinks and config.getboolean('znt.settings',
-                                                                          'body_messages_url_notes') else False,
+            _bool=True if self.options.triggerlinks and config.getboolean('znt.settings', 'body_messages_url_notes') else False,
             url=self.macros.triggerurl,
             _type=config.get('znt.settings', 'body_messages_url_emoji_notes')))
         # history url
