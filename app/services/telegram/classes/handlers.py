@@ -291,7 +291,7 @@ class ZNT:
                             if tags.find(':') != -1:
                                 tag, value = re.split(r':+', tags, maxsplit=1)
                                 if tag != config.get('znt.settings', 'trigger_settings_tag') and tag != config.get(
-                                        'znt.settings', 'trigger_info_mentions_tag'):
+                                        'znt.settings', 'trigger_settings_tag_mentions'):
                                     tags_list.append('#{tag}_{value}'.format(
                                         tag=_type + re.sub(r"\W+", "_", tag) if _type else re.sub(r"\W+", "_", tag),
                                         value=re.sub(r"\W+", "_", value)))
@@ -348,20 +348,23 @@ class ZNT:
                 ', '.join(self.zntsettings[config.get('znt.settings', 'trigger_settings_tag')])))
 
     def __create_mentions_list(self):
-        try:
-            if self.options.zntmentions and self.macros.eventtags:
+        settings_mentions = next((x for x in self.zntsettings[config.get('znt.settings', 'trigger_settings_tag')]
+                                  if config.get('znt.settings', 'trigger_settings_tag_mentions') in x), None)
+        if self.options.zntmentions and settings_mentions:
+            try:
+                znts_mentions = str(settings_mentions.split('=')[1])
                 mentions_list = []
-                for tags in self.macros.eventtags.split(', '):
-                    if tags.find(':') != -1:
-                        tag, value = re.split(r':+', tags, maxsplit=1)
-                        if tag == config.get('znt.settings', 'trigger_info_mentions_tag'):
-                            for username in value.split():
-                                mentions_list.append(username)
-                self.mentions = mentions_list
+                for username in znts_mentions.split():
+                    mentions_list.append(username)
+            except Exception as err:
+                self.logger.error("Exception occurred: {}: {}".format(
+                    config.get('znt.settings', 'trigger_settings_tag'), err),
+                    exc_info=config.get('logging', 'exc_info')), exit(1)
             else:
-                return False
-        except Exception as err:
-            self.logger.error("Exception occurred: {}".format(err), exc_info=config.get('logging', 'exc_info')), exit(1)
+                self.mentions = mentions_list
+                return
+        else:
+            return False
 
     def __create_links_list(self, _bool=None, url=None, _type=None, url_list=None):
         try:
