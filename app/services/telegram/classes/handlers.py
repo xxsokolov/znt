@@ -37,8 +37,8 @@ class ZNT:
         self.zntsettings: dict = {}
         self.settings_not_notify: bool = False
         self.settings_chart_disable: bool = False
-        self.settings_chart_single: bool = True if eval(config.get('znt.settings', 'zabbix_graph_single')) else False
-        self.settings_chart_group: bool = True if not eval(config.get('znt.settings', 'zabbix_graph_single')) else False
+        self.settings_chart_single: bool = True if config.getboolean('znt.settings', 'zabbix_graph_single') else False
+        self.settings_chart_group: bool = True if not config.getboolean('znt.settings', 'zabbix_graph_single') else False
         self.mentions: list = []
         self.chart_png: list = []
         self.message: str
@@ -57,14 +57,16 @@ class ZNT:
         self.__create_tags()
         self.__create_mentions_list()
         self.__create_chart()
-        if any(True if x else False for x in self.chart_png):
+        if any(True if x else False for x in self.chart_png) \
+                and config.getboolean('znt.settings', 'watermark') \
+                and config.getboolean('znt.settings', 'zabbix_graph'):
             self.__watermark_text()
         self.__create_message()
 
     def __create_message(self):
         message_header = html.escape(
             self.send.message.header.format_map(FailSafeDict(json.loads(config.get('znt.settings', 'emoji_map')))))
-        if config.get('znt.settings', 'body_messages_cut_symbol') and len(self.send.message.body) > int(
+        if config.getboolean('znt.settings', 'body_messages_cut_symbol') and len(self.send.message.body) > int(
                 config.get('znt.settings', 'body_messages_max_symbol')):
             truncated = True
             self.logger.info(
@@ -77,16 +79,13 @@ class ZNT:
                 zabbix_server=config.get('zabbix', 'url'), eventid=self.macros.eventid,
                 triggerid=self.macros.triggerid)) if truncated else html.escape(self.send.message.body)
 
-        links = ' '.join(self.links) if config.get('znt.settings', 'body_messages_url') and len(self.links) != 0 else ''
+        links = ' '.join(self.links) if config.getboolean('znt.settings', 'body_messages_url') and len(self.links) != 0 else ''
 
-        tags = ' '.join(self.tags) if config.get('znt.settings', 'body_messages_tags') and len(self.tags) != 0 else ''
+        tags = ' '.join(self.tags) if config.getboolean('znt.settings', 'body_messages_tags') and len(self.tags) != 0 else ''
 
-        tags_settings = ' '.join(self.zntsettings['tags']) if config.get('znt.settings', 'body_messages_tags') and len(
-            self.zntsettings['tags']) != 0 else ''
+        tags_settings = ' '.join(self.zntsettings['tags']) if config.getboolean('znt.settings', 'body_messages_tags_trigger_settings') and len(self.zntsettings['tags']) != 0 else ''
 
-        mentions = ' '.join(self.mentions) if not isinstance(self.mentions, bool) and config.get(
-            'znt.settings', 'body_messages_mentions_settings') and len(
-            self.mentions) != 0 else ''
+        mentions = ' '.join(self.mentions) if not isinstance(self.mentions, bool) and config.getboolean('znt.settings', 'body_messages_mentions_settings') and len(self.mentions) != 0 else ''
 
         self.message = config.get('znt.settings', 'body_messages').format(
             subject=message_header, body='\n\n' + body if body else '', links='\n' + links if links else '',
@@ -131,13 +130,13 @@ class ZNT:
             self.chart_png.clear()
             self.chart_png = new_chart_png
         except Exception as err:
-            self.logger.error("Exception occurred: {}".format(err), exc_info=config.get('logging', 'exc_info'))
+            self.logger.error("Exception occurred: {}".format(err), exc_info=config.getboolean('logging', 'exc_info'))
             raise err
         else:
             return
 
     def __create_chart(self):
-        if (self.options.graphs and config.get('znt.settings', 'zabbix_graph')) and not self.settings_chart_disable:
+        if (self.options.graphs and config.getboolean('znt.settings', 'zabbix_graph')) and not self.settings_chart_disable:
 
             settings_dash = next((x for x in self.zntsettings[config.get('znt.settings', 'trigger_settings_tag')] if
                                   config.get('znt.settings', 'trigger_settings_tag_grafana_dash') in x), None)
@@ -193,16 +192,16 @@ class ZNT:
     def __create_links(self):
         # trigger url
         self.links.append(self.__create_links_list(
-            _bool=True if self.options.triggerlinks and config.get('znt.settings',
-                                                                   'body_messages_url_notes') else False,
+            _bool=True if self.options.triggerlinks and config.getboolean('znt.settings',
+                                                                          'body_messages_url_notes') else False,
             url=self.macros.triggerurl,
             _type=config.get('znt.settings', 'body_messages_url_emoji_notes')))
         # history url
         for item_id in list(set([x for x in self.macros.itemid.split()])):
             if re.findall(r"\d+", item_id):
                 items_link = self.__create_links_list(
-                    _bool=True if self.options.graphlinks and config.get('znt.settings',
-                                                                         'body_messages_url_graphs') else False,
+                    _bool=True if self.options.graphlinks and config.getboolean('znt.settings',
+                                                                                'body_messages_url_graphs') else False,
                     url=config.get('zabbix', 'history_url').format(
                         zabbix_server=config.get('zabbix', 'url'),
                         itemid=item_id,
@@ -212,19 +211,19 @@ class ZNT:
                 self.links.append(items_link) if items_link else None
         # host url
         self.links.append(self.__create_links_list(
-            _bool=True if self.options.hostlinks and config.get('znt.settings', 'body_messages_url_host') else False,
+            _bool=True if self.options.hostlinks and config.getboolean('znt.settings', 'body_messages_url_host') else False,
             url=config.get('zabbix', 'host_url').format(zabbix_server=config.get('zabbix', 'url'),
                                                         host=self.macros.hostname),
             _type=config.get('znt.settings', 'body_messages_url_emoji_host')))
         # ack url
         self.links.append(self.__create_links_list(
-            _bool=True if self.options.acklinks and config.get('znt.settings', 'body_messages_url_ack') else False,
+            _bool=True if self.options.acklinks and config.getboolean('znt.settings', 'body_messages_url_ack') else False,
             url=config.get('zabbix', 'ack_url').format(zabbix_server=config.get('zabbix', 'url'),
                                                        eventid=self.macros.eventid),
             _type=config.get('znt.settings', 'body_messages_url_emoji_ack')))
         # event url
         self.links.append(self.__create_links_list(
-            _bool=True if self.options.eventlinks and config.get('znt.settings', 'body_messages_url_event') else False,
+            _bool=True if self.options.eventlinks and config.getboolean('znt.settings', 'body_messages_url_event') else False,
             url=config.get('zabbix', 'event_url').format(zabbix_server=config.get('zabbix', 'url'),
                                                          eventid=self.macros.eventid,
                                                          triggerid=self.macros.triggerid),
@@ -234,25 +233,25 @@ class ZNT:
     def __create_tags(self):
         # self.__create_tags_list()
         event = self.__create_tags_list(
-            _bool=True if self.options.eventtag and config.get('znt.settings', 'body_messages_tags_event') else False,
+            _bool=True if self.options.eventtag and config.getboolean('znt.settings', 'body_messages_tags_event') else False,
             tag=self.macros.eventtags, _type=None)
         eventid = self.__create_tags_list(
-            _bool=True if self.options.eventtag and config.get('znt.settings', 'body_messages_tags_eventid') else False,
+            _bool=True if self.options.eventtag and config.getboolean('znt.settings', 'body_messages_tags_eventid') else False,
             tag=self.macros.eventid, _type=config.get('znt.settings', 'body_messages_tags_prefix_eventid'))
         itemid = self.__create_tags_list(
-            _bool=True if self.options.itemidtag and config.get('znt.settings', 'body_messages_tags_itemid') else False,
+            _bool=True if self.options.itemidtag and config.getboolean('znt.settings', 'body_messages_tags_itemid') else False,
             tag=' '.join([item_id for item_id in self.macros.itemid.split() if re.findall(r"\d+", item_id)]),
             _type=config.get('znt.settings', 'body_messages_tags_prefix_itemid'))
         triggerid = self.__create_tags_list(
-            _bool=True if self.options.triggeridtag and config.get('znt.settings',
-                                                                   'body_messages_tags_triggerid') else False,
+            _bool=True if self.options.triggeridtag and config.getboolean('znt.settings',
+                                                                          'body_messages_tags_triggerid') else False,
             tag=self.macros.triggerid, _type=config.get('znt.settings', 'body_messages_tags_prefix_triggerid'))
         actionid = self.__create_tags_list(
-            _bool=True if self.options.actionidtag and config.get('znt.settings',
-                                                                  'body_messages_tags_actionid') else False,
+            _bool=True if self.options.actionidtag and config.getboolean('znt.settings',
+                                                                         'body_messages_tags_actionid') else False,
             tag=self.macros.actionid, _type=config.get('znt.settings', 'body_messages_tags_prefix_actionid'))
         hostid = self.__create_tags_list(
-            _bool=True if self.options.hostidtag and config.get('znt.settings', 'body_messages_tags_hostid') else False,
+            _bool=True if self.options.hostidtag and config.getboolean('znt.settings', 'body_messages_tags_hostid') else False,
             tag=self.macros.hostid, _type=config.get('znt.settings', 'body_messages_tags_prefix_hostid'))
 
         self.tags = [x if x else None for x in [event, eventid, itemid, triggerid, actionid, hostid]]
@@ -345,7 +344,7 @@ class ZNT:
             else:
                 self.zntsettings = False
         except Exception as err:
-            self.logger.error("Exception occurred: {}".format(err), exc_info=config.get('logging', 'exc_info')), exit(1)
+            self.logger.error("Exception occurred: {}".format(err), exc_info=config.getboolean('logging', 'exc_info')), exit(1)
         else:
             self.zntsettings = {'tags': tags_list, config.get('znt.settings', 'trigger_settings_tag'): settings_list}
             self.logger.debug("Найдены тэги настроек: {}: {}".format(
@@ -364,7 +363,7 @@ class ZNT:
             except Exception as err:
                 self.logger.error("Exception occurred: {}: {}".format(
                     config.get('znt.settings', 'trigger_settings_tag'), err),
-                    exc_info=config.get('logging', 'exc_info')), exit(1)
+                    exc_info=config.getboolean('logging', 'exc_info')), exit(1)
             else:
                 self.mentions = mentions_list
                 return
@@ -396,7 +395,7 @@ class ZNT:
             except Exception as err:
                 self.logger.error("Exception occurred: {}: {}".format(
                     config.get('znt.settings', 'trigger_settings_tag'), err),
-                    exc_info=config.get('logging', 'exc_info')), exit(1)
+                    exc_info=config.getboolean('logging', 'exc_info')), exit(1)
             else:
                 if znts_send == 'silent':
                     self.logger.warn("Отправка сообщения без оповещения: {}:'{}'".format(
@@ -418,7 +417,7 @@ class ZNT:
             except Exception as err:
                 self.logger.error("Exception occurred: {}: {}".format(
                     config.get('znt.settings', 'trigger_settings_tag'), err),
-                    exc_info=config.get('logging', 'exc_info')), exit(1)
+                    exc_info=config.getboolean('logging', 'exc_info')), exit(1)
             else:
                 if znts_chart == 'disable':
                     self.logger.warn("Отправка сообщения без графиков: {}:'{}'.".format(
@@ -448,7 +447,7 @@ class ZNT:
             except Exception as err:
                 self.logger.error("Exception occurred: {}: {}".format(
                     config.get('znt.settings', 'trigger_settings_tag'), err),
-                    exc_info=config.get('logging', 'exc_info')), exit(1)
+                    exc_info=config.getboolean('logging', 'exc_info')), exit(1)
             else:
                 self.logger.warn("Отправка сообщения с измененным периодом графиков: {}:'{}'.".format(
                     config.get('znt.settings', 'trigger_settings_tag'), chart_period))
@@ -470,7 +469,7 @@ class ZNT:
     #         except Exception as err:
     #             self.logger.error("Exception occurred: {}:{}, {}".format(
     #                 config.get('znt.settings', 'trigger_settings_tag'), chart_period_raw, err),
-    #                 exc_info=config.get('logging', 'exc_info')), exit(1)
+    #                 exc_info=config.getboolean('logging', 'exc_info')), exit(1)
     #         else:
     #             self.chart_period = chart_period
     #     elif self.options.graphs_period != 'default':
@@ -492,7 +491,7 @@ class ZNT:
             except Exception as err:
                 self.logger.error("Exception occurred: {}:{}, {}".format(
                     config.get('znt.settings', 'trigger_settings_tag'), settings_raw, err),
-                    exc_info=config.get('logging', 'exc_info')), exit(1)
+                    exc_info=config.getboolean('logging', 'exc_info')), exit(1)
             else:
                 # Ищем имя бота отвечающего требованиям Telegram
                 if re.search("^(?=.{5,35}$)@[a-zA-Z0-9_]+(?:bot|Bot)", znts_bot):
@@ -519,7 +518,7 @@ class ZNT:
             except Exception as err:
                 self.logger.error("Exception occurred: {}:{}, {}".format(
                     config.get('znt.settings', 'trigger_settings_tag'), settings_raw, err),
-                    exc_info=config.get('logging', 'exc_info')), exit(1)
+                    exc_info=config.getboolean('logging', 'exc_info')), exit(1)
             else:
                 self.logger.debug("Поиск приоритетных ботов в группе \"{}\"".format(znts_bot_group))
                 list_priority = []

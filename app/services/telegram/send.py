@@ -36,7 +36,7 @@ def send_message(bot_config, send_config):
                             proxy=znt.bot_proxy,
                             proxy_use=znt.bot_proxy_use)
     except Exception as err:
-        # logger.log.error(err, exc_info=config.get('logging', 'exc_info'))
+        # logger.log.error(err, exc_info=config.getboolean('logging', 'exc_info'))
         raise err
     else:
         return response

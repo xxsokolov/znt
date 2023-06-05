@@ -272,7 +272,7 @@ class Telegram:
                     self.chat_name = cache_chat_id['name']
                     return
         except Exception as err:
-            self.logger.exception("Ошибка: {}".format(err), exc_info=config.get('logging', 'exc_info'))
+            self.logger.exception("Ошибка: {}".format(err), exc_info=config.getboolean('logging', 'exc_info'))
             raise err
 
     def get_update(self, type: str='chat'):
@@ -392,7 +392,7 @@ class Telegram:
                         bot=self.bot.get_me().username,
                         sendto=self.send_to))
         except Exception as err:
-            self.logger.exception("Ошибка: {}".format(err), exc_info=config.get('logging', 'exc_info'))
+            self.logger.exception("Ошибка: {}".format(err), exc_info=config.getboolean('logging', 'exc_info'))
             raise err
 
 
@@ -443,10 +443,10 @@ class Telegram:
                         self.__send_messages()
                     else:
                         self.logger.critical("Ошибка в Api Telegram: {}".format(err),
-                                             exc_info=config.get('logging', 'exc_info'))
+                                             exc_info=config.getboolean('logging', 'exc_info'))
                         raise err
                 except Exception as err:
-                    self.logger.critical("Ошибка: {}".format(err), exc_info=config.get('logging', 'exc_info'))
+                    self.logger.critical("Ошибка: {}".format(err), exc_info=config.getboolean('logging', 'exc_info'))
                     raise SystemExit(1)
                 else:
                     if not self.response_tg[0].chat.title == self.chat_name:
@@ -492,10 +492,10 @@ class Telegram:
                         self.__send_messages()
                     else:
                         self.logger.critical("Ошибка в Api Telegram: {}".format(err),
-                                             exc_info=config.get('logging', 'exc_info'))
+                                             exc_info=config.getboolean('logging', 'exc_info'))
                         raise err
                 except Exception as err:
-                    self.logger.critical("Ошибка: {}".format(err), exc_info=config.get('logging', 'exc_info'))
+                    self.logger.critical("Ошибка: {}".format(err), exc_info=config.getboolean('logging', 'exc_info'))
                     raise SystemExit(1)
                 else:
                     if not self.response_tg.chat.title == self.chat_name:
