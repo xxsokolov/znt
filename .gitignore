@@ -2,7 +2,7 @@ venv
 .idea
 .run
 docker/.env
-app/services/telegram/config.py
+*.cfg
 *.yaml
 *.log
 *.cache
