@@ -8,7 +8,8 @@
 ####################################
 import sys
 import logging
-import uvicorn
+import os
+from app import config
 
 
 class CustomFormatter(logging.Formatter):
@@ -45,39 +46,34 @@ class Log:
         else:
             self.log_level = logging.INFO
 
+        global_format = "[%(asctime)s] - PID:%(process)s - %(name)s - %(filename)s:%(lineno)d - %(levelname)s: %(message)s"
         self.log = logging.getLogger(None if debug else __name__)
         self.log.setLevel(self.log_level)
+        logging.getLogger('sqlalchemy.engine').setLevel(self.log_level)
+        logging.getLogger('sqlalchemy.pool').setLevel(self.log_level)
 
         self.uvicorn_logger = logging.getLogger('uvicorn')
         self.uvicorn_logger.propagate = False
 
-        # self.uvicorn_logger_access = logging.getLogger('uvicorn.access')
-        # self.uvicorn_logger_access.propagate = True
-        #
-        # self.uvicorn_logger_error = logging.getLogger('uvicorn.error')
-        # self.uvicorn_logger_error.propagate = True
-
-        self.sqlalchemy_engine = logging.getLogger('sqlalchemy.engine').setLevel(self.log_level)
-        self.sqlalchemy_pool = logging.getLogger('sqlalchemy.pool').setLevel(self.log_level)
-        # self.sqlalchemy_engine.propagate = True
-
         stdout_handler = logging.StreamHandler(sys.stdout)
         stdout_handler.setLevel(self.log_level)
-        stdout_handler.setFormatter(CustomFormatter(fmt="[%(asctime)s] - PID:%(process)s - %(name)s - %(filename)s:%(lineno)d - %(levelname)s: %(message)s"))
+        stdout_handler.setFormatter(CustomFormatter(fmt=global_format))
 
-        # file_handler = logging.FileHandler(filename=config_log_file, mode='a')
-        # file_handler.setLevel(self.log_level)
-        # file_handler.setFormatter(log_format)
+        current = os.path.dirname(os.path.realpath(__file__))
+        parent = os.path.dirname(current)
+        log_file = config.get('logging', 'log_file')
+
+        file_handler = logging.FileHandler(filename=log_file if log_file else os.path.join(parent, 'logs', 'znt.log'),
+                                           mode='a')
+        file_handler.setLevel(self.log_level)
+        file_handler_format = logging.Formatter(global_format)
+        file_handler.setFormatter(fmt=file_handler_format)
 
         self.log.addHandler(stdout_handler)
         self.uvicorn_logger.addHandler(stdout_handler)
-        # self.uvicorn_logger_access.addHandler(stdout_handler)
-        # self.uvicorn_logger_error.addHandler(stdout_handler)
 
-        # self.sqlalchemy_engine.setLevel(logging.DEBUG)
-        # self.sqlalchemy_engine.addHandler(stdout_handler)
-        # self.sqlalchemy_pool.addHandler(stdout_handler)
-        # self.log.addHandler(file_handler)
+        self.log.addHandler(file_handler)
+        self.uvicorn_logger.addHandler(file_handler)
 
     def close_file_handler(self):
         for handler in self.log.root.handlers[:]:
