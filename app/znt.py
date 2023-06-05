@@ -1,3 +1,4 @@
+#!../venv/bin/python
 # -*- coding: utf-8 -*-
 ####################################
 #          Sokolov Dmitry          #
@@ -14,15 +15,15 @@ __version__ = "2.0"
 
 import os
 import sys
+current = os.path.dirname(os.path.realpath(__file__))
+parent = os.path.dirname(current)
+sys.path.append(parent)
 from fastapi import FastAPI, Request
 from fastapi.middleware.wsgi import WSGIMiddleware
 # from flask import Flask, render_template
 from app import config, logger
 import uvicorn
 
-current = os.path.dirname(os.path.realpath(__file__))
-parent = os.path.dirname(current)
-sys.path.append(parent)
 
 from app.api.v1.api import api_v1_router
 # from app.api.v2.api import api_v2_router
