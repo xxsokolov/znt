@@ -83,7 +83,7 @@ class ZNT:
         links = ' '.join(x for x in self.links if x) if config.getboolean('znt.settings', 'body_messages_url') and len(
             self.links) != 0 else ''
 
-        tags = ' '.join(self.tags) if config.getboolean('znt.settings', 'body_messages_tags') and len(self.tags) != 0 else ''
+        tags = ' '.join(x for x in self.tags if x) if config.getboolean('znt.settings', 'body_messages_tags') and len(self.tags) != 0 else ''
 
         tags_settings = ' '.join(self.zntsettings['tags']) if config.getboolean('znt.settings', 'body_messages_tags_trigger_settings') and len(self.zntsettings['tags']) != 0 else ''
 
