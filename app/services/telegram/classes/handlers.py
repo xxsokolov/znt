@@ -37,8 +37,8 @@ class ZNT:
         self.zntsettings: dict = {}
         self.settings_not_notify: bool = False
         self.settings_chart_disable: bool = False
-        self.settings_chart_single: bool = False
-        self.settings_chart_group: bool = False
+        self.settings_chart_single: bool = True if eval(config.get('znt.settings', 'zabbix_graph_single')) else False
+        self.settings_chart_group: bool = True if not eval(config.get('znt.settings', 'zabbix_graph_single')) else False
         self.mentions: list = []
         self.chart_png: list = []
         self.message: str
@@ -180,6 +180,11 @@ class ZNT:
                     self.chart_png.append(self.zabbix_req.get_chart_png(itemid=item_id, name=self.chart_name,
                                                                         period=self.chart_period))
             elif self.settings_chart_group:
+                for item_id in list(set([x for x in self.macros.itemid.split()])):
+                    if re.findall(r"\d+", item_id):
+                        self.chart_png.append(self.zabbix_req.get_chart_png(itemid=item_id, name=self.chart_name,
+                                                                            period=self.chart_period))
+            else:
                 for item_id in list(set([x for x in self.macros.itemid.split()])):
                     if re.findall(r"\d+", item_id):
                         self.chart_png.append(self.zabbix_req.get_chart_png(itemid=item_id, name=self.chart_name,
@@ -423,9 +428,11 @@ class ZNT:
                     self.logger.warn("Отправка сообщения c одним графиком: {}:'{}'.".format(
                         config.get('znt.settings', 'trigger_settings_tag'), settings_chart))
                     self.settings_chart_single = True
+                    self.settings_chart_group = False
                 elif znts_chart == 'group':
                     self.logger.warn("Отправка сообщения с группой графиков: {}:'{}'.".format(
                         config.get('znt.settings', 'trigger_settings_tag'), settings_chart))
+                    self.settings_chart_single = False
                     self.settings_chart_group = True
                 else:
                     self.logger.warn("В тегэ {}:'{}' неизвестный параметр.".format(

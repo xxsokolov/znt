@@ -14,6 +14,8 @@ adminlte = False
 
 [znt.settings]
 zabbix_graph = True
+# zabbix_graph_single параметр в состоянии False будет добавлять все графики, которые участвуют в расчете триггера, в состоянии True только первый
+zabbix_graph_single = False
 zabbix_graph_period_default = 10800
 
 watermark = True
