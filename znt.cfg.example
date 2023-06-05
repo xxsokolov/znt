@@ -23,7 +23,7 @@ watermark_label = ZNT@Dmitry Sokolov (https://github.com/xxsokolov/znt)
 watermark_minimal_height = 30
 watermark_fill = 0, 0, 0, 128
 watermark_rotate = 0
-watermark_expand = True
+#watermark_expand = True
 watermark_text_color = 128, 128, 128
 
 body_messages = <b>{subject}</b>{body}{links}{tags}{tags_settings}{mentions}
@@ -52,14 +52,17 @@ body_messages_tags_itemid = True
 body_messages_tags_triggerid = True
 body_messages_tags_actionid = True
 body_messages_tags_hostid = True
-body_messages_tags_trigger_settings = True
-body_messages_mentions_settings = True
+
 body_messages_tags_no = no_tags
 body_messages_tags_prefix_eventid = eid_
 body_messages_tags_prefix_itemid = iid_
 body_messages_tags_prefix_triggerid = tid_
 body_messages_tags_prefix_actionid = aid_
 body_messages_tags_prefix_hostid = hid_
+
+body_messages_tags_trigger_settings = True
+
+body_messages_mentions_settings = True
 
 trigger_settings_tag = znts
 # Тэг управления нотификацией, доступные значения - znts:send=[silent, disable]
