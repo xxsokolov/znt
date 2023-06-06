@@ -98,18 +98,43 @@ keyboard_button_acknowledge = Acknowledge
 keyboard_button_history = History
 keyboard_row_width = 3
 
-emoji_map = {
-    "Problem": "🚨",
-    "Resolved": "✅",
-    "Update": "🚧",
+# ZNT Media types -> Message Templates -> Message type
+#
+# {Trigger_Problem} {TRIGGER.SEVERITY} {{TRIGGER.SEVERITY}}: {EVENT.NAME}
+# {Trigger_Resolved} {TRIGGER.SEVERITY} {{TRIGGER.SEVERITY}} {EVENT.NAME}
+# {Trigger_Update} {TRIGGER.SEVERITY} {{TRIGGER.SEVERITY}} {EVENT.NAME}
+#
+# {Service_Problem} {EVENT.SEVERITY} {{{EVENT.SEVERITY}}}: {EVENT.NAME}
+# {Service_Resolved} {EVENT.SEVERITY} {{{EVENT.SEVERITY}}}: {EVENT.NAME}
+# {Service_Update} {EVENT.SEVERITY} {{{EVENT.SEVERITY}}}: {EVENT.NAME}
+#
+# {Discovery} {DISCOVERY.DEVICE.STATUS} {DISCOVERY.DEVICE.IPADDRESS}
+# {Autoregistration} {HOST.HOST}
+# {Internal_Problem}
+# {Internal_Resolved}
+
+type_emoji_map = {
+    "Trigger_Problem": "🎛🚨",
+    "Trigger_Resolved": "🎛✅",
+    "Trigger_Update": "🎛🚧",
+    "Service_Problem": "🧮🚨",
+    "Service_Resolved": "🧮✅",
+    "Service_Update": "🧮🚧",
+    "Internal_Problem": "🛟🚨",
+    "Internal_Resolved": "🛟✅",
+    "Discovery": "🔬",
+    "Autoregistration": "🛎"
+  }
+
+severity_emoji_map = {
     "Not classified": "⁉️",
     "Information": "💙",
     "Warning": "💛",
     "Average": "🧡",
     "High": "❤️",
     "Disaster": "💔",
-    "Test": "🚽💩"}
-
+    "Test": "🚽💩"
+  }
 
 [webserver]
 host = 0.0.0.0
@@ -118,7 +143,7 @@ port = 8081
 [logging]
 log_file =
 exc_info = True
-logging_level = INFO
+logging_level = DEBUG
 
 [zabbix]
 url=http://192.168.1.200:8080/

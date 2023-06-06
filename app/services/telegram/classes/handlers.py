@@ -64,8 +64,13 @@ class ZNT:
         self.__create_message()
 
     def __create_message(self):
-        message_header = html.escape(
-            self.send.message.header.format_map(FailSafeDict(json.loads(config.get('znt.settings', 'emoji_map')))))
+        message_header = self.send.message.header.format_map(
+            FailSafeDict(
+                {**json.loads(config.get('znt.settings', 'type_emoji_map')),
+                 **json.loads(config.get('znt.settings', 'severity_emoji_map'))
+                 }
+            )
+        )
         if config.getboolean('znt.settings', 'body_messages_cut_symbol') and len(self.send.message.body) > int(
                 config.get('znt.settings', 'body_messages_max_symbol')):
             truncated = True
