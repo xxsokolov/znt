@@ -1,9 +1,9 @@
 zabbix_export:
   version: '6.2'
-  date: '2023-06-02T14:09:43Z'
+  date: '2023-06-07T14:40:25Z'
   media_types:
     -
-      name: ZNT
+      name: 'ZNT TPDA'
       type: WEBHOOK
       parameters:
         -
@@ -15,6 +15,9 @@ zabbix_export:
         -
           name: action_id
           value: '{ACTION.ID}'
+        -
+          name: action_type
+          value: trigger
         -
           name: body
           value: '{ALERT.MESSAGE}'
@@ -94,104 +97,108 @@ zabbix_export:
           value: 'true'
         -
           name: znt_host
-          value: 192.168.1.118
+          value: 192.168.1.200
         -
           name: znt_port
-          value: '80'
+          value: '8081'
         -
           name: znt_proto
           value: http
       script: |
         var znt = {
-        
-            sendmessage: function () {
-                var fields = {
-        			send_to: params.send_to,
-        			bot: params.bot,
-        			bot_group: params.bot_group,
-        			title: params.title,
-        			message: params.message,
-        			header: params.header,
-        			body: params.body,
-        			hostname: params.hostname,
-        			itemid: params.item_id,
-        			hostid: params.host_id,
-        			triggerid: params.trigger_id,
-        			triggerurl: params.trigger_url,
-        			eventtags: params.event_tags,
-        			eventid: params.event_id,
-        			actionid: params.action_id,
-        			graphs: params.graphs,
-        			hostlinks: params.host_links,
-        			graphlinks: params.graph_links,
-        			acklinks: params.ack_links,
-        			eventlinks: params.event_links,
-        			triggerlinks: params.trigger_links,
-        			eventtag: params.event_tag,
-        			eventidtag: params.eventid_tag,
-        			itemidtag: params.itemid_tag,
-        			triggeridtag: params.triggerid_tag,
-        			actionidtag: params.actionid_tag,
-        			hostidtag: params.hostid_tag,
-        			zntsettingstag: params.zntsettings_tag,
-        			zntmentions: params.zntmentions,
-        			graphs_period: params.graphs_period,
-        		},
-                data,
-                response,
-                request = new HttpRequest(),
-        		url = params.znt_proto + '://' + params.znt_host + ':' + params.znt_port + '/api/latest/telegram/sendMessage';
-        		Zabbix.log(4, '[ZNT Webhook] url: ' + url);
-        		
-                request.addHeader('Content-Type: application/json');
-        		request.addHeader('User-Agent: Zabbix');
-        		
-                data = JSON.stringify(fields);
-        
-                Zabbix.log(4, '[ZNT Webhook] params: ' + data);
-                response = request.post(url, data);
-                Zabbix.log(4, '[ZNT Webhook] HTTP code: ' + request.getStatus());
-                Zabbix.log(4, '[ZNT Webhook] HTTP description: ' + response.description);
+                
+                    sendmessage: function () {
+                        var fields = {
+                			send_to: params.send_to,
+                			bot: params.bot,
+                			bot_group: params.bot_group,
+                			title: params.title,
+                			message: params.message,
+                			header: params.header,
+                			body: params.body,
+                			hostname: params.hostname,
+                			itemid: params.item_id,
+                			hostid: params.host_id,
+                			triggerid: params.trigger_id,
+                			triggerurl: params.trigger_url,
+                			eventtags: params.event_tags,
+                			eventid: params.event_id,
+                			actionid: params.action_id,
+                			graphs: params.graphs,
+                			hostlinks: params.host_links,
+                			graphlinks: params.graph_links,
+                			acklinks: params.ack_links,
+                			eventlinks: params.event_links,
+                			triggerlinks: params.trigger_links,
+                			eventtag: params.event_tag,
+                			eventidtag: params.eventid_tag,
+                			itemidtag: params.itemid_tag,
+                			triggeridtag: params.triggerid_tag,
+                			actionidtag: params.actionid_tag,
+                			hostidtag: params.hostid_tag,
+                			zntsettingstag: params.zntsettings_tag,
+                			zntmentions: params.zntmentions,
+                			graphs_period: params.graphs_period,
+                		},
+                        data,
+                        response,
+                        request = new HttpRequest(),
+                		url = params.znt_proto + '://' + params.znt_host + ':' + params.znt_port + '/api/latest/telegram/sendMessage';
+                		Zabbix.log(4, '[ZNT Webhook] url: ' + url);
+                		
+                        request.addHeader('Content-Type: application/json');
+                		request.addHeader('User-Agent: Zabbix');
+                		
+                        data = JSON.stringify(fields);
+                
+                        Zabbix.log(4, '[ZNT Webhook] params: ' + data);
+                        response = request.post(url, data);
+                        Zabbix.log(4, '[ZNT Webhook] HTTP code: ' + request.getStatus());
+                        Zabbix.log(4, '[ZNT Webhook] HTTP description: ' + response.description);
+                        try {
+                            response = JSON.parse(response);
+                        }
+                        catch (error) {
+                            response = null;
+                        }
+                
+                        if (request.getStatus() !== 200) {
+                            if (typeof response.description === 'string') {
+                                throw response.description;
+                            }
+                            else {
+                                throw 'Unknown error. Check debug log for more information.';
+                            }
+                        }
+                    }
+                };
+                
                 try {
-                    response = JSON.parse(response);
+                    var params = JSON.parse(value);
+                
+                    znt.sendmessage();
+                
+                    return 'OK';
                 }
                 catch (error) {
-                    response = null;
+                    Zabbix.log(4, '[ZNT Webhook] notification failed: ' + error);
+                    throw 'Sending failed: ' + error + '.';
                 }
-        
-                if (request.getStatus() !== 200) {
-                    if (typeof response.description === 'string') {
-                        throw response.description;
-                    }
-                    else {
-                        throw 'Unknown error. Check debug log for more information.';
-                    }
-                }
-            }
-        };
-        
-        try {
-            var params = JSON.parse(value);
-        
-            znt.sendmessage();
-        
-            return 'OK';
-        }
-        catch (error) {
-            Zabbix.log(4, '[ZNT Webhook] notification failed: ' + error);
-            throw 'Sending failed: ' + error + '.';
-        }
       timeout: 10s
       description: |
-        ZNT 
+        ZNT TPDA
         
+        → Trigger-based notifications and commands
+        → Problem update notifications and commands
+        → Discovery notifications and commands
+        → Autoregistration notifications and commands
         
         https://github.com/xxsokolov/znt
       message_templates:
         -
           event_source: TRIGGERS
           operation_mode: PROBLEM
-          subject: '{Problem} {TRIGGER.SEVERITY} {{TRIGGER.SEVERITY}}: {EVENT.NAME}'
+          subject: '{Trigger_Problem} {TRIGGER.SEVERITY} {{TRIGGER.SEVERITY}}: {EVENT.NAME}'
           message: |
             Host: {HOST.HOST} [{HOST.IP}]
             Last value: {ITEM.LASTVALUE1} ({TIME})
@@ -202,7 +209,7 @@ zabbix_export:
         -
           event_source: TRIGGERS
           operation_mode: RECOVERY
-          subject: '{Resolved} {TRIGGER.SEVERITY} {{TRIGGER.SEVERITY}} {EVENT.NAME}'
+          subject: '{Trigger_Resolved} {TRIGGER.SEVERITY} {{TRIGGER.SEVERITY}} {EVENT.NAME}'
           message: |
             Host: {HOST.HOST} [{HOST.IP}]
             Last value: {ITEM.LASTVALUE1} ({TIME})
@@ -213,7 +220,7 @@ zabbix_export:
         -
           event_source: TRIGGERS
           operation_mode: UPDATE
-          subject: '{Update} {TRIGGER.SEVERITY} {{TRIGGER.SEVERITY}} {EVENT.NAME}'
+          subject: '{Trigger_Update} {TRIGGER.SEVERITY} {{TRIGGER.SEVERITY}} {EVENT.NAME}'
           message: |
             Host: {HOST.HOST} [{HOST.IP}]
             Last value: {ITEM.LASTVALUE1} ({TIME})
@@ -226,7 +233,7 @@ zabbix_export:
         -
           event_source: DISCOVERY
           operation_mode: PROBLEM
-          subject: 'Discovery: {DISCOVERY.DEVICE.STATUS} {DISCOVERY.DEVICE.IPADDRESS}'
+          subject: '{Discovery} {DISCOVERY.DEVICE.STATUS} {DISCOVERY.DEVICE.IPADDRESS}'
           message: |
             Discovery rule: {DISCOVERY.RULE.NAME}
             
@@ -242,7 +249,7 @@ zabbix_export:
         -
           event_source: AUTOREGISTRATION
           operation_mode: PROBLEM
-          subject: 'Autoregistration: {HOST.HOST}'
+          subject: '{Autoregistration} {HOST.HOST}'
           message: |
             Host name: {HOST.HOST}
             Host IP: {HOST.IP}

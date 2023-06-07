@@ -12,6 +12,7 @@ class Message(BaseModel):
     send_to: str = Field(default=None, description="Укажите @username или Chat Name")
     bot: str = Field(default='default', description="Укажите @username или Chat Name")
     bot_group: str = Field(default='default', description="Укажите @username или Chat Name")
+    media_type: str = Field(default='TPDA', description="Укажите media_type [TPDA, Service, Internal]")
     title: str = Field(
         default='Zabbix server - Zabbix server: More than 100 items having missing data for more than 10 minutes',
         description="Укажите @username или Chat Name")
