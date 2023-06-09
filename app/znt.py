@@ -17,29 +17,16 @@ import sys
 current = os.path.dirname(os.path.realpath(__file__))
 parent = os.path.dirname(current)
 sys.path.append(parent)
-from fastapi import FastAPI, Request
+
 from fastapi.middleware.wsgi import WSGIMiddleware
-# from flask import Flask, render_template
-from app import config, logger
+from app import config, logger, api_app
 import uvicorn
-
-
 from app.api.v1.api import api_v1_router
 # from app.api.v2.api import api_v2_router
 from app.api.znt.api import znt_router
 
-# from app.admin.main import flask_app
-# from app.admin.app import create_app
 if config.getboolean('core', 'adminlte'):
     from app.adminlte.app import create_app
-
-debug_mode = bool(True if logger.get_level_name() == 'DEBUG' else False)
-
-api_app = FastAPI(
-    title='FastAPI: znt', version='2.0', openapi_url='/api/openapi.jsons', docs_url='/api/docs',
-    redoc_url='/api/redocs',
-    debug=debug_mode
-)
 
 api_app.include_router(api_v1_router, prefix='/api/latest')
 api_app.include_router(api_v1_router, prefix='/api/v1')

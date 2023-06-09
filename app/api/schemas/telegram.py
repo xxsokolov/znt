@@ -5,14 +5,15 @@
 #  https://t.me/ZbxNTg #
 ########################
 # https://github.com/xxsokolov/znt
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError, root_validator
+from typing import Literal
 
 
-class Message(BaseModel):
+class ZabbixTPDA(BaseModel):
     send_to: str = Field(default=None, description="Укажите @username или Chat Name")
     bot: str = Field(default='default', description="Укажите @username или Chat Name")
     bot_group: str = Field(default='default', description="Укажите @username или Chat Name")
-    media_type: str = Field(default='TPDA', description="Укажите media_type [TPDA, Service, Internal]")
+    media_type: Literal["TPDA"]
     title: str = Field(
         default='Zabbix server - Zabbix server: More than 100 items having missing data for more than 10 minutes',
         description="Укажите @username или Chat Name")
@@ -47,3 +48,28 @@ class Message(BaseModel):
     zntmentions: bool = Field(default=True, description="The description of the item")
     keyboard: bool = Field(default=True, description="The description of the item")
     graphs_period: str = Field(default='default', description="The description of the item")
+
+    # @root_validator(pre=True)
+    # def check_media_type(cls, values):
+    #     pass
+
+
+class ZabbixService(BaseModel):
+    send_to: str = Field(default=None, description="Укажите @username или Chat Name")
+    bot: str = Field(default='default', description="Укажите @username или Chat Name")
+    bot_group: str = Field(default='default', description="Укажите @username или Chat Name")
+    media_type: Literal["Service"]
+
+    header: str = Field(
+        default='{Problem} Warning {Warning}: Zabbix server: More than 100C:: items having missing data for more than 10 minutes',
+        description="The description of the item")
+    body: str = Field(
+        default='Host: Zabbix server [127.0.0.1]\nLast value: 0 (12:40:52)\nDuration: 1s\nhost: Zabbix server',
+        description="The description of the item")
+
+    eventtags: str = Field(default='', description="target:zabbix, ZNTMentions:@xxsokolov, ZNTMentions:@xxsokolov, znts:dash=YGLp1d14k, znts:bot=@username")
+    eventtag: bool = Field(default=True, description="The description of the item")
+
+    zntsettingstag: bool = Field(default=True, description="The description of the item")
+    zntmentions: bool = Field(default=True, description="The description of the item")
+    keyboard: bool = Field(default=True, description="The description of the item")

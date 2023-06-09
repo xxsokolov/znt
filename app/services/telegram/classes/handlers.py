@@ -50,7 +50,6 @@ class ZNT:
         self.__create_settings_list()
         self.__handling_settings()
         self.__init_bot()
-
         self.__settings_chart_period()
         self.__create_graph_name()
         self.__create_links()
