@@ -1,0 +1,139 @@
+zabbix_export:
+  version: '6.4'
+  media_types:
+    - name: 'ZNT Service'
+      type: WEBHOOK
+      parameters:
+        - name: body
+          value: '{ALERT.MESSAGE}'
+        - name: bot
+          value: '@znt_test_test_bot'
+        - name: bot_group
+        - name: event_tag
+          value: 'true'
+        - name: event_tags
+          value: '{EVENT.TAGS}'
+        - name: header
+          value: '{ALERT.SUBJECT}'
+        - name: media_type
+          value: Service
+        - name: send_to
+          value: '{ALERT.SENDTO}'
+        - name: zntmentions
+          value: 'true'
+        - name: zntsettings_tag
+          value: 'true'
+        - name: znt_host
+          value: 192.168.1.118
+        - name: znt_port
+          value: '8081'
+        - name: znt_proto
+          value: http
+      script: |
+        var znt = {
+                
+                    sendmessage: function () {
+                        var fields = {
+                			send_to: params.send_to,
+                			bot: params.bot,
+                			bot_group: params.bot_group,
+                                        media_type: params.media_type,
+                			message: params.message,
+                			header: params.header,
+                			body: params.body,
+                			eventtags: params.event_tags,
+                			eventtag: params.event_tag,
+                			zntsettingstag: params.zntsettings_tag,
+                			zntmentions: params.zntmentions,
+                		},
+                        data,
+                        response,
+                        request = new HttpRequest(),
+                		url = params.znt_proto + '://' + params.znt_host + ':' + params.znt_port + '/api/latest/telegram/sendMessage';
+                		Zabbix.log(4, '[ZNT Webhook] url: ' + url);
+                		
+                        request.addHeader('Content-Type: application/json');
+                		request.addHeader('User-Agent: Zabbix');
+                		
+                        data = JSON.stringify(fields);
+                
+                        Zabbix.log(4, '[ZNT Webhook] params: ' + data);
+                        response = request.post(url, data);
+                        Zabbix.log(4, '[ZNT Webhook] HTTP code: ' + request.getStatus());
+                        Zabbix.log(4, '[ZNT Webhook] HTTP description: ' + response.description);
+                        try {
+                            response = JSON.parse(response);
+                        }
+                        catch (error) {
+                            response = null;
+                        }
+                
+                        if (request.getStatus() !== 200) {
+                            if (typeof response.description === 'string') {
+                                throw response.description;
+                            }
+                            else {
+                                throw 'Unknown error. Check debug log for more information.';
+                            }
+                        }
+                    }
+                };
+                
+                try {
+                    var params = JSON.parse(value);
+                
+                    znt.sendmessage();
+                
+                    return 'OK';
+                }
+                catch (error) {
+                    Zabbix.log(4, '[ZNT Webhook] notification failed: ' + error);
+                    throw 'Sending failed: ' + error + '.';
+                }
+      timeout: 10s
+      description: |
+        ZNT Service
+        
+        Service-based notifications and commands
+        
+        https://github.com/xxsokolov/znt
+      message_templates:
+        - event_source: INTERNAL
+          operation_mode: PROBLEM
+          subject: '{Internal_Problem} internal problem'
+          message: 'internal problem message'
+        - event_source: INTERNAL
+          operation_mode: RECOVERY
+          subject: '{Internal_Resolved} internal resolved'
+          message: 'internal resolved message'
+        - event_source: SERVICE
+          operation_mode: PROBLEM
+          subject: '{Service_Problem} {EVENT.SEVERITY} {{EVENT.SEVERITY}}: {EVENT.NAME}'
+          message: |
+            Service problem started at {EVENT.TIME} on {EVENT.DATE}
+            Service problem name: {EVENT.NAME}
+            Service: {SERVICE.NAME}
+            Severity: {EVENT.SEVERITY}
+            Original problem ID: {EVENT.ID}
+            Service description: {SERVICE.DESCRIPTION}
+            
+            {SERVICE.ROOTCAUSE}
+        - event_source: SERVICE
+          operation_mode: RECOVERY
+          subject: '{Service_Resolved} {EVENT.SEVERITY} {{EVENT.SEVERITY}}: {EVENT.NAME}'
+          message: |
+            Service "{SERVICE.NAME}" has been resolved at {EVENT.RECOVERY.TIME} on {EVENT.RECOVERY.DATE}
+            Problem name: {EVENT.NAME}
+            Problem duration: {EVENT.DURATION}
+            Severity: {EVENT.SEVERITY}
+            Original problem ID: {EVENT.ID}
+            Service description: {SERVICE.DESCRIPTION}
+        - event_source: SERVICE
+          operation_mode: UPDATE
+          subject: '{Service_Update} {EVENT.SEVERITY} {{EVENT.SEVERITY}}: {EVENT.NAME}'
+          message: |
+            Changed "{SERVICE.NAME}" service status to {EVENT.UPDATE.SEVERITY} at {EVENT.UPDATE.DATE} {EVENT.UPDATE.TIME}.
+            Current problem age is {EVENT.AGE}.
+            Service description: {SERVICE.DESCRIPTION}
+            
+            {SERVICE.ROOTCAUSE}
