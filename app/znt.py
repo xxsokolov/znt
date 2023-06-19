@@ -29,7 +29,7 @@ if config.getboolean('core', 'adminlte'):
     from app.adminlte.app import create_app
 
 api_app.include_router(api_v1_router, prefix='/api/latest')
-api_app.include_router(api_v1_router, prefix='/api/v1')
+# api_app.include_router(api_v1_router, prefix='/api/0.6')
 # app.include_router(api_v2_router, prefix='/api/v2')
 api_app.include_router(znt_router, prefix='/api/znt')
 if config.getboolean('core', 'adminlte'):

@@ -14,5 +14,6 @@ debug_mode = bool(True if logger.get_level_name() == 'DEBUG' else False)
 api_app = FastAPI(
     title='FastAPI: znt', version='2.0', openapi_url='/api/openapi.jsons', docs_url='/api/docs',
     redoc_url='/api/redocs',
+    root_path_in_servers=False,
     debug=debug_mode
 )
