@@ -109,7 +109,7 @@ zabbix_export:
                         data,
                         response,
                         request = new HttpRequest(),
-                		url = params.znt_proto + '://' + params.znt_host + ':' + params.znt_port + '/api/latest/telegram/sendMessage';
+                		url = params.znt_proto + '://' + params.znt_host + ':' + params.znt_port + '/api/zbx_tpda/tg/sendMessage';
                 		Zabbix.log(4, '[ZNT Webhook] url: ' + url);
                 		
                         request.addHeader('Content-Type: application/json');
