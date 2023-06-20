@@ -53,7 +53,7 @@ body_messages_tags_triggerid = True
 body_messages_tags_actionid = True
 body_messages_tags_hostid = True
 
-body_messages_tags_no = no_tags
+body_messages_tags_no = #no_tags
 body_messages_tags_prefix_eventid = eid_
 body_messages_tags_prefix_itemid = iid_
 body_messages_tags_prefix_triggerid = tid_
