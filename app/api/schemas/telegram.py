@@ -73,3 +73,20 @@ class ZabbixService(BaseModel):
     zntsettingstag: bool = Field(default=True, description="The description of the item")
     zntmentions: bool = Field(default=True, description="The description of the item")
     keyboard: bool = Field(default=True, description="The description of the item")
+
+
+class ZabbixAR(BaseModel):
+    send_to: str = Field(default=None, description="Укажите @username или Chat Name")
+    bot: str = Field(default='default', description="Укажите @username или Chat Name")
+    bot_group: str = Field(default='default', description="Укажите @username или Chat Name")
+    header: str = Field(
+        default='{Problem} Warning {Warning}: Zabbix server: More than 100C:: items having missing data for more than 10 minutes',
+        description="The description of the item")
+    body: str = Field(
+        default='Host: Zabbix server [127.0.0.1]\nLast value: 0 (12:40:52)\nDuration: 1s\nhost: Zabbix server',
+        description="The description of the item")
+    eventid: str = Field(default='55', description="The description of the item")
+    actionid: str = Field(default='7', description="The description of the item")
+    eventidtag: bool = Field(default=True, description="The description of the item")
+    actionidtag: bool = Field(default=True, description="The description of the item")
+

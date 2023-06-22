@@ -164,3 +164,68 @@ async def telegram_send_message(request: Request, schema: schemas.telegram.Zabbi
                          response={**dict(response=response.response_tg_json)}),
             status_code=200
         )
+
+@telegram_router.post("/zbx_autoreg/tg/sendMessage", status_code=status.HTTP_200_OK,
+                      response_model=schemas.telegram.ZabbixTPDA, summary="Отправить сообщение в Telegram",
+                      description='Zabbix Media Type: ZNT Autoregistration')
+async def telegram_send_message(request: Request, schema: schemas.telegram.ZabbixAR,
+                                db: Session = Depends(get_db)):
+    try:
+        json_ = await request.json()
+    except json.decoder.JSONDecodeError:
+        json_ = None
+
+    logger.log.debug('Получен запрос:\n'
+                     'Client: {0}:{1}\n'
+                     'Headers: {2}\n'
+                     'Body: {3}'.format(request.client.host, request.client.port, request.headers.items(),
+                                        json.dumps(json_, indent=4)))
+
+    bots = db.query(models.bot.Bot).outerjoin(models.proxy.Proxy, models.bot.Bot.proxy_id == models.proxy.Proxy.id).all()
+    bot_list = []
+    for bot in bots:
+        proxy_dict = {}
+        bot_dict = {column.name: getattr(bot, column.name) for column in bot.__table__.columns}
+        if bot_dict['proxy_id']:
+            proxy_dict = {column.name: getattr(bot.proxy, column.name) for column in bot.proxy.__table__.columns}
+        bot_dict['proxy'] = proxy_dict
+        bot_list.append(bot_dict)
+
+    body = schema.dict()
+    send_config = dict(
+        preferences=dict(
+            telegram=dict(
+                send=dict(
+                    bot=body['bot'], bot_group=body['bot_group'], send_to=body['send_to'],
+                    charts=dict(title='', period=''), message=dict(header=body['header'], body=body['body']))),
+            zabbix=dict(
+                macros=dict(hostname='', itemid='', hostid='', triggerid='', triggerurl='', eventtags='',
+                            eventid=body['eventid'], actionid=body['actionid'])),
+            znt=dict(
+                options=dict(
+                    graphs=False, hostlinks=False, graphlinks=False,
+                    acklinks=False, eventlinks=False, triggerlinks=False,
+                    eventtag=False, eventidtag=body['eventidtag'], itemidtag=False,
+                    triggeridtag=False, actionidtag=body['actionidtag'], hostidtag=False,
+                    zntsettingstag=False, zntmentions=False,
+                    keyboard=False,
+                    graphs_period=0
+                )
+            )
+        )
+    )
+    try:
+        response = send_message(bot_config=bot_list, send_config=send_config)
+    except ZNTSettingTags as err:
+        return JSONResponse(content=dict(status=dict(message=err.message, detail=err.detail)))
+    except Exception as err:
+        raise HTTPException(status_code=500,
+                            detail={"type": type(err).__name__, "error": str(err), "at": str(traceback.format_exc())},
+                            headers={"X-Error": "ERROR"})
+    else:
+        return JSONResponse(
+            content=dict(status="Собщение отправлено",
+                         request={**send_config},
+                         response={**dict(response=response.response_tg_json)}),
+            status_code=200
+        )

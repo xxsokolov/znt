@@ -232,7 +232,7 @@ class ZNT:
             _type=config.get('znt.settings', 'body_messages_url_emoji_notes')))
         # history url
         for item_id in list(set([x for x in self.macros.itemid.split()])):
-            if re.findall(r"\d+", item_id):
+            if re.findall(r"^[1-9]\d*$", item_id):
                 items_link = self.__create_links_list(
                     _bool=True if self.options.graphlinks and config.getboolean('znt.settings',
                                                                                 'body_messages_url_graphs') else False,
@@ -270,11 +270,11 @@ class ZNT:
             _bool=True if self.options.eventtag and config.getboolean('znt.settings', 'body_messages_tags_event') else False,
             tag=self.macros.eventtags, _type=None)
         eventid = self.__create_tags_list(
-            _bool=True if self.options.eventtag and config.getboolean('znt.settings', 'body_messages_tags_eventid') else False,
+            _bool=True if self.options.eventidtag and config.getboolean('znt.settings', 'body_messages_tags_eventid') else False,
             tag=self.macros.eventid, _type=config.get('znt.settings', 'body_messages_tags_prefix_eventid'))
         itemid = self.__create_tags_list(
             _bool=True if self.options.itemidtag and config.getboolean('znt.settings', 'body_messages_tags_itemid') else False,
-            tag=' '.join([item_id for item_id in self.macros.itemid.split() if re.findall(r"\d+", item_id)]),
+            tag=' '.join([item_id for item_id in self.macros.itemid.split() if re.findall(r"^[1-9]\d*$", item_id)]),
             _type=config.get('znt.settings', 'body_messages_tags_prefix_itemid'))
         triggerid = self.__create_tags_list(
             _bool=True if self.options.triggeridtag and config.getboolean('znt.settings',
