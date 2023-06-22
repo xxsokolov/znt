@@ -1,11 +1,9 @@
 zabbix_export:
   version: '6.4'
   media_types:
-    - name: 'ZNT TPDA'
+    - name: 'ZNT Autoregistration'
       type: WEBHOOK
       parameters:
-        - name: ack_links
-          value: 'true'
         - name: actionid_tag
           value: 'true'
         - name: action_id
@@ -19,52 +17,12 @@ zabbix_export:
           value: 'true'
         - name: event_id
           value: '{EVENT.ID}'
-        - name: event_links
-          value: 'true'
-        - name: event_tag
-          value: 'true'
-        - name: event_tags
-          value: '{EVENT.TAGS}'
-        - name: graphs
-          value: 'true'
-        - name: graphs_period
-          value: default
-        - name: graph_links
-          value: 'true'
-        - name: graph_title
-          value: '{HOST.HOST} - {EVENT.NAME}'
         - name: header
           value: '{ALERT.SUBJECT}'
-        - name: hostid_tag
-          value: 'true'
-        - name: hostname
-          value: '{HOST.HOST}'
-        - name: host_id
-          value: '{HOST.ID}'
-        - name: host_links
-          value: 'true'
-        - name: itemid_tag
-          value: 'true'
-        - name: item_id
-          value: '{ITEM.ID1} {ITEM.ID2} {ITEM.ID3} {ITEM.ID4}'
-        - name: media_type
-          value: TPDA
         - name: send_to
           value: '{ALERT.SENDTO}'
-        - name: triggerid_tag
-          value: 'true'
-        - name: trigger_id
-          value: '{TRIGGER.ID}'
-        - name: trigger_links
-          value: 'true'
-        - name: trigger_url
-          value: '{TRIGGER.URL}'
-        - name: zntmentions
-          value: 'true'
-        - name: zntsettings_tag
-          value: 'true'
         - name: znt_host
-          value: 192.168.1.200
+          value: 192.168.1.118
         - name: znt_port
           value: '8081'
         - name: znt_proto
@@ -109,7 +67,7 @@ zabbix_export:
                         data,
                         response,
                         request = new HttpRequest(),
-                		url = params.znt_proto + '://' + params.znt_host + ':' + params.znt_port + '/api/latest/zbx_tpda/tg/sendMessage';
+                		url = params.znt_proto + '://' + params.znt_host + ':' + params.znt_port + '/api/latest/zbx_autoreg/tg/sendMessage';
                 		Zabbix.log(4, '[ZNT Webhook] url: ' + url);
                 		
                         request.addHeader('Content-Type: application/json');
@@ -152,65 +110,17 @@ zabbix_export:
                 }
       timeout: 10s
       description: |
-        ZNT TPDA
+        ZNT Autoregistration
         
-        → Trigger-based notifications and commands
-        → Problem update notifications and commands
-        → Discovery notifications and commands
+        Используется для нотификации при авторегистрации хостов
+        
         → Autoregistration notifications and commands
         
         https://github.com/xxsokolov/znt
       message_templates:
-        - event_source: TRIGGERS
-          operation_mode: PROBLEM
-          subject: '{Trigger_Problem} {TRIGGER.SEVERITY} {{TRIGGER.SEVERITY}}: {EVENT.NAME}'
-          message: |
-            Host: {HOST.HOST} [{HOST.IP}]
-            Last value: {ITEM.LASTVALUE1} ({TIME})
-            Duration: {EVENT.AGE}
-            
-            Problem started at {EVENT.TIME} on {EVENT.DATE}
-            Original problem ID: {EVENT.ID}
-        - event_source: TRIGGERS
-          operation_mode: RECOVERY
-          subject: '{Trigger_Resolved} {TRIGGER.SEVERITY} {{TRIGGER.SEVERITY}} {EVENT.NAME}'
-          message: |
-            Host: {HOST.HOST} [{HOST.IP}]
-            Last value: {ITEM.LASTVALUE1} ({TIME})
-            Duration: {EVENT.AGE}
-            
-            Problem has been resolved in {EVENT.DURATION} at {EVENT.RECOVERY.TIME} on {EVENT.RECOVERY.DATE}
-            Original problem ID: {EVENT.ID}
-        - event_source: TRIGGERS
-          operation_mode: UPDATE
-          subject: '{Trigger_Update} {TRIGGER.SEVERITY} {{TRIGGER.SEVERITY}} {EVENT.NAME}'
-          message: |
-            Host: {HOST.HOST} [{HOST.IP}]
-            Last value: {ITEM.LASTVALUE1} ({TIME})
-            Duration: {EVENT.AGE}
-            
-            {USER.FULLNAME} {EVENT.UPDATE.ACTION} problem at {EVENT.UPDATE.DATE} {EVENT.UPDATE.TIME}.
-            {EVENT.UPDATE.MESSAGE}
-            
-            Current problem status is {EVENT.STATUS}, acknowledged: {EVENT.ACK.STATUS}.
-        - event_source: DISCOVERY
-          operation_mode: PROBLEM
-          subject: '{Discovery} {DISCOVERY.DEVICE.STATUS} {DISCOVERY.DEVICE.IPADDRESS}'
-          message: |
-            Discovery rule: {DISCOVERY.RULE.NAME}
-            
-            Device IP: {DISCOVERY.DEVICE.IPADDRESS}
-            Device DNS: {DISCOVERY.DEVICE.DNS}
-            Device status: {DISCOVERY.DEVICE.STATUS}
-            Device uptime: {DISCOVERY.DEVICE.UPTIME}
-            
-            Device service name: {DISCOVERY.SERVICE.NAME}
-            Device service port: {DISCOVERY.SERVICE.PORT}
-            Device service status: {DISCOVERY.SERVICE.STATUS}
-            Device service uptime: {DISCOVERY.SERVICE.UPTIME}
         - event_source: AUTOREGISTRATION
           operation_mode: PROBLEM
-          subject: '{Autoregistration} {HOST.HOST}'
+          subject: '{Autoregistration} Autoregistration - {HOST.HOST}'
           message: |
             Host name: {HOST.HOST}
             Host IP: {HOST.IP}

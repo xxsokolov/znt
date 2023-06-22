@@ -4,11 +4,19 @@ zabbix_export:
     - name: 'ZNT Service'
       type: WEBHOOK
       parameters:
+        - name: actionid_tag
+          value: 'true'
+        - name: action_id
+          value: '{ACTION.ID}'
         - name: body
           value: '{ALERT.MESSAGE}'
         - name: bot
           value: '@znt_test_test_bot'
         - name: bot_group
+        - name: eventid_tag
+          value: 'true'
+        - name: event_id
+          value: '{EVENT.ID}'
         - name: event_tag
           value: 'true'
         - name: event_tags
