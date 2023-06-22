@@ -181,17 +181,17 @@ class ZNT:
             # Добавляем графики на основании itemid из экшена
             if self.settings_chart_single:
                 item_id = [x for x in self.macros.itemid.split()][0]
-                if re.findall(r"\d+", item_id):
+                if re.findall(r"^[1-9]\d*$", item_id):
                     self.chart_png.append(self.zabbix_req.get_chart_png(itemid=item_id, name=self.chart_name,
                                                                         period=self.chart_period))
             elif self.settings_chart_group:
                 for item_id in list(set([x for x in self.macros.itemid.split()])):
-                    if re.findall(r"\d+", item_id):
+                    if re.findall(r"^[1-9]\d*$", item_id):
                         self.chart_png.append(self.zabbix_req.get_chart_png(itemid=item_id, name=self.chart_name,
                                                                             period=self.chart_period))
             else:
                 for item_id in list(set([x for x in self.macros.itemid.split()])):
-                    if re.findall(r"\d+", item_id):
+                    if re.findall(r"^[1-9]\d*$", item_id):
                         self.chart_png.append(self.zabbix_req.get_chart_png(itemid=item_id, name=self.chart_name,
                                                                             period=self.chart_period))
 
