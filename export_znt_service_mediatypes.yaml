@@ -49,7 +49,7 @@ zabbix_export:
                         data,
                         response,
                         request = new HttpRequest(),
-                		url = params.znt_proto + '://' + params.znt_host + ':' + params.znt_port + '/api/zbx_service/tg/sendMessage';
+                		url = params.znt_proto + '://' + params.znt_host + ':' + params.znt_port + '/api/latest/zbx_service/tg/sendMessage';
                 		Zabbix.log(4, '[ZNT Webhook] url: ' + url);
                 		
                         request.addHeader('Content-Type: application/json');
