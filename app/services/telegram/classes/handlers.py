@@ -9,7 +9,7 @@ import re
 import html
 import io
 import types
-import json
+from math import ceil
 
 from PIL import Image, ImageDraw, ImageFont
 from .render_grafana import RenderingPNG
@@ -99,6 +99,28 @@ class ZNT:
             mentions='\n\n' + mentions if mentions else '')
         return
 
+    def __check_minimum_dimensions(self, png):
+        try:
+            new_chart_png = []
+            img = io.BytesIO(png)
+            new_png = io.BytesIO()
+            img = Image.open(img).convert("RGBA")
+
+            w, h = img.size
+            newH = ceil(w / 10)
+            padded = Image.new('RGB', (w, newH), 'red')
+
+            if h < 30:
+                padded.paste(img, (0, int((newH - h) / 2)))
+                padded.save(new_png, format='PNG')
+            else:
+                img.save(new_png, format='PNG')
+        except Exception as err:
+            self.logger.error("Exception occurred: {}".format(err), exc_info=config.getboolean('logging', 'exc_info'))
+            raise err
+        else:
+            return new_png.getvalue()
+
     def __watermark_text(self):
         try:
             new_chart_png = []
@@ -111,7 +133,8 @@ class ZNT:
                     self.logger.info(
                         "Cannot set watermark text, img height {} (min. {})".format(
                             img.height, config.get('znt.settings', 'watermark_minimal_height')))
-                    return False
+                    new_chart_png.append(chart)
+                    continue
 
                 font = ImageFont.load_default()
                 line_width, line_height = font.getsize(config.get('znt.settings', 'watermark_label'))
@@ -182,18 +205,24 @@ class ZNT:
             if self.settings_chart_single:
                 item_id = [x for x in self.macros.itemid.split()][0]
                 if re.findall(r"^[1-9]\d*$", item_id):
-                    self.chart_png.append(self.zabbix_req.get_chart_png(itemid=item_id, name=self.chart_name,
-                                                                        period=self.chart_period))
+                    chart_png = self.zabbix_req.get_chart_png(itemid=item_id, name=self.chart_name,
+                                                              period=self.chart_period)
+                    chart_png = self.__check_minimum_dimensions(chart_png)
+                    self.chart_png.append(chart_png)
             elif self.settings_chart_group:
                 for item_id in list(set([x for x in self.macros.itemid.split()])):
                     if re.findall(r"^[1-9]\d*$", item_id):
-                        self.chart_png.append(self.zabbix_req.get_chart_png(itemid=item_id, name=self.chart_name,
-                                                                            period=self.chart_period))
+                        chart_png = self.zabbix_req.get_chart_png(itemid=item_id, name=self.chart_name,
+                                                                  period=self.chart_period)
+                        chart_png = self.__check_minimum_dimensions(chart_png)
+                        self.chart_png.append(chart_png)
             else:
                 for item_id in list(set([x for x in self.macros.itemid.split()])):
                     if re.findall(r"^[1-9]\d*$", item_id):
-                        self.chart_png.append(self.zabbix_req.get_chart_png(itemid=item_id, name=self.chart_name,
-                                                                            period=self.chart_period))
+                        chart_png = self.zabbix_req.get_chart_png(itemid=item_id, name=self.chart_name,
+                                                                  period=self.chart_period)
+                        chart_png = self.__check_minimum_dimensions(chart_png)
+                        self.chart_png.append(chart_png)
 
     def __create_links(self):
         # trigger url
